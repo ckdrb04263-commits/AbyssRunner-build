@@ -1,0 +1,42 @@
+{
+  "activeProfile": "816x1039",
+  "uiScaleLabel": "확인 필요",
+  "timeouts": {
+    "generalSeconds": 20,
+    "retrySeconds": 60,
+    "combatSeconds": 600,
+    "pollGeneralMinMs": 380,
+    "pollGeneralMaxMs": 520,
+    "pollCombatMinMs": 620,
+    "pollCombatMaxMs": 800
+  },
+  "input": {
+    "provider": "Interception",
+    "keyboardDevice": 1,
+    "mouseDevice": 11,
+    "keyHoldMinMs": 40,
+    "keyHoldMaxMs": 110,
+    "mouseHoldMinMs": 30,
+    "mouseHoldMaxMs": 110,
+    "cursorTolerancePx": 8
+  },
+  "features": {
+    "foodAssist": false,
+    "revivalAssist": false,
+    "reconnectAssist": false,
+    "skipDialogueAssist": true
+  },
+  "autoResume": {
+    "enabled": false,
+    "errorWaitMinutes": 10,
+    "userIdleMinutes": 10,
+    "stableSamples": 3,
+    "sampleIntervalMs": 250,
+    "countdownSeconds": 3
+  },
+  "logging": {
+    "maxFileMb": 8,
+    "maxFiles": 6,
+    "maxDiagnostics": 80
+  }
+}

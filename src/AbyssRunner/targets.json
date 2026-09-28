@@ -1,0 +1,127 @@
+{
+  "profiles": {
+    "816x1039": {
+      "captureWidth": 816,
+      "captureHeight": 1039,
+      "includesWindowFrame": true,
+      "defaultTemplateThreshold": 0.75,
+      "regions": {
+        "abyssMenu": [450,280,640,420],
+        "destinationList": [100,480,700,900],
+        "enterButton": [280,940,560,1020],
+        "resultTouch": [240,930,600,1010],
+        "retryButton": [340,900,500,1039],
+        "skipDialogue": [600,55,816,145],
+        "chatInput": [80,929,816,1039],
+        "menuCheck": [408,120,816,700],
+        "full": [0,0,816,1039]
+      },
+      "targets": {
+        "abyssMenu": {
+          "region": "abyssMenu",
+          "enabled": true,
+          "minimumScore": 2,
+          "requiredEvidence": [],
+          "ocr": {"phrases":["어비스"],"mode":"general","weight":2},
+          "template": {"files":["a_abyss.png"],"threshold":0.75,"weight":2}
+        },
+        "destinationHusang": {
+          "region": "destinationList",
+          "enabled": true,
+          "minimumScore": 2,
+          "requiredEvidence": ["template"],
+          "template": {"files":["a_husang.png"],"threshold":0.75,"weight":2}
+        },
+        "destinationKwanggi": {
+          "region": "destinationList",
+          "enabled": true,
+          "minimumScore": 2,
+          "requiredEvidence": ["template"],
+          "template": {"files":["a_kwanggi.png"],"threshold":0.75,"weight":2}
+        },
+        "destinationMoolgil": {
+          "region": "destinationList",
+          "enabled": true,
+          "minimumScore": 2,
+          "requiredEvidence": ["template"],
+          "template": {"files":["a_moolgil.png"],"threshold":0.75,"weight":2}
+        },
+        "enter": {
+          "region": "enterButton",
+          "enabled": true,
+          "minimumScore": 3,
+          "requiredEvidence": [],
+          "ocr": {"phrases":["입장하기"],"mode":"general","weight":2},
+          "template": {"files":["a_enter.png"],"threshold":0.75,"weight":2},
+          "color": {"mode":"greenOrBlue","weight":1,"dominance":60}
+        },
+        "resultTouch": {
+          "region": "resultTouch",
+          "enabled": true,
+          "minimumScore": 2,
+          "requiredEvidence": [],
+          "ocr": {"phrases":["터치해"],"mode":"contains","weight":2},
+          "template": {"files":["touch.png","touch2.png"],"threshold":0.75,"weight":2}
+        },
+        "retry": {
+          "region": "retryButton",
+          "enabled": true,
+          "minimumScore": 3,
+          "requiredEvidence": ["ocr","green"],
+          "ocr": {"phrases":["다시 하기"],"mode":"general","weight":2},
+          "color": {"mode":"green","weight":1,"dominance":60}
+        },
+        "skipDialogue": {
+          "region": "skipDialogue",
+          "enabled": true,
+          "minimumScore": 2,
+          "requiredEvidence": ["ocr"],
+          "ocr": {"phrases":["장면 넘기기","대화 넘기기"],"mode":"general","weight":2}
+        },
+        "revival": {
+          "region": "revivalRegion",
+          "enabled": false,
+          "minimumScore": 2,
+          "requiredEvidence": ["template"],
+          "template": {"files":["revival.png"],"threshold":0.8,"weight":2}
+        },
+        "meal": {
+          "region": "mealRegion",
+          "enabled": false,
+          "minimumScore": 2,
+          "requiredEvidence": ["template"],
+          "template": {"files":["meal.png"],"threshold":0.8,"weight":2}
+        },
+        "reconnectDialog": {
+          "region": "reconnectDialogRegion",
+          "enabled": false,
+          "minimumScore": 2,
+          "requiredEvidence": ["ocr"],
+          "ocr": {"phrases":["실제 재접속 안내 문구를 교정 후 입력"],"mode":"exact","weight":2}
+        },
+        "reconnectButton": {
+          "region": "reconnectButtonRegion",
+          "enabled": false,
+          "minimumScore": 2,
+          "requiredEvidence": ["ocr"],
+          "ocr": {"phrases":["다시 시도하기"],"mode":"general","weight":2},
+          "template": {"files":["reconnect_retry.png"],"threshold":0.8,"weight":2}
+        },
+        "purchaseWarning": {
+          "region": "purchaseWarningRegion",
+          "enabled": false,
+          "minimumScore": 2,
+          "requiredEvidence": ["ocr"],
+          "ocr": {"phrases":["실제 구매 안내 문구를 교정 후 입력"],"mode":"exact","weight":2}
+        },
+        "revivalContext": {
+          "region": "revivalContextRegion",
+          "enabled": false,
+          "minimumScore": 2,
+          "requiredEvidence": ["ocr"],
+          "ocr": {"phrases":["실제 행동불능 화면 문구를 교정 후 입력"],"mode":"exact","weight":2}
+        }
+      }
+    }
+  }
+}
