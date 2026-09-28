@@ -15,7 +15,7 @@
         "chatInput": [0,860,1920,1080],
         "menuCheck": [1280,100,1910,1040],
         "full": [0,0,1920,1080],
-        "revivalRegion": [1360,760,1885,945],
+        "revivalRegion": [1550,840,1920,1020],
         "revivalContextRegion": [650,90,1240,420],
         "mealRegion": [240,15,405,155]
       },
