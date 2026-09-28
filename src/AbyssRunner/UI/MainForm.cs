@@ -111,7 +111,7 @@ public sealed class MainForm : Form
         _metricsTimer.Tick += (_, _) =>
         {
             if (_uiRunStarted is DateTimeOffset started && _cts is not null)
-                _elapsed.Text = $"경과: {DateTimeOffset.Now - started:hh\:mm\:ss}";
+                _elapsed.Text = $"경과: {DateTimeOffset.Now - started:hh\\:mm\\:ss}";
         };
         _metricsTimer.Start();
 
@@ -238,8 +238,8 @@ public sealed class MainForm : Form
             _engine.MetricsChanged += (count, elapsed, average) => Ui(() =>
             {
                 _count.Text = $"완료: {count}";
-                _elapsed.Text = $"경과: {elapsed:hh\:mm\:ss}";
-                _average.Text = average is null ? "평균: -" : $"평균: {average.Value:mm\:ss}";
+                _elapsed.Text = $"경과: {elapsed:hh\\:mm\\:ss}";
+                _average.Text = average is null ? "평균: -" : $"평균: {average.Value:mm\\:ss}";
             });
 
             _cts = new CancellationTokenSource();
