@@ -20,6 +20,26 @@ jobs:
           [IO.File]::WriteAllBytes("$PWD\source.zip", [Convert]::FromBase64String($b64))
           Expand-Archive -Path "$PWD\source.zip" -DestinationPath "$PWD\work" -Force
 
+      - name: Apply compile fixes
+        shell: pwsh
+        run: |
+          $p = ".\work\src\AbyssRunner\Vision\TemplateMatcher.cs"
+          $s = Get-Content $p -Raw
+          $s = $s.Replace("new Rectangle(Point.Empty, screenshot.Size)", "new Rectangle(System.Drawing.Point.Empty, screenshot.Size)")
+          Set-Content $p $s -Encoding utf8
+
+          $p = ".\work\src\AbyssRunner\Vision\Detector.cs"
+          $s = Get-Content $p -Raw
+          $s = $s.Replace("new Point(a.Left + a.Width / 2, a.Top + a.Height / 2)", "new System.Drawing.Point(a.Left + a.Width / 2, a.Top + a.Height / 2)")
+          $s = $s.Replace("new Point(b.Left + b.Width / 2, b.Top + b.Height / 2)", "new System.Drawing.Point(b.Left + b.Width / 2, b.Top + b.Height / 2)")
+          $s = $s.Replace("new Rectangle(Point.Empty, screenshot.Size)", "new Rectangle(System.Drawing.Point.Empty, screenshot.Size)")
+          Set-Content $p $s -Encoding utf8
+
+          $p = ".\work\src\AbyssRunner\Core\AutomationEngine.cs"
+          $s = Get-Content $p -Raw
+          $s = $s.Replace("var avg = _roundTimes.Count == 0 ? null : TimeSpan.FromMilliseconds(_roundTimes.Average(x => x.TotalMilliseconds));", "TimeSpan? avg = _roundTimes.Count == 0 ? null : TimeSpan.FromMilliseconds(_roundTimes.Average(x => x.TotalMilliseconds));")
+          Set-Content $p $s -Encoding utf8
+
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
         with:
