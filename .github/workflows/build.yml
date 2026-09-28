@@ -1,0 +1,42 @@
+name: Build AbyssRunner EXE
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Reassemble source archive
+        shell: pwsh
+        run: |
+          $parts = Get-ChildItem .\build\source.part*.b64 | Sort-Object Name
+          $b64 = ($parts | ForEach-Object { Get-Content $_.FullName -Raw }) -join ''
+          [IO.File]::WriteAllBytes("$PWD\source.zip", [Convert]::FromBase64String($b64))
+          Expand-Archive -Path "$PWD\source.zip" -DestinationPath "$PWD\work" -Force
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        shell: pwsh
+        run: dotnet restore .\work\AbyssRunner.sln
+
+      - name: Publish Windows x64 EXE
+        shell: pwsh
+        run: |
+          dotnet publish .\work\src\AbyssRunner\AbyssRunner.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=false -p:DebugType=None -p:DebugSymbols=false -o .\dist
+
+      - name: Upload EXE package
+        uses: actions/upload-artifact@v4
+        with:
+          name: AbyssRunner-win-x64
+          path: dist/**
+          if-no-files-found: error
