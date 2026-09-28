@@ -1,4 +1,4 @@
-name: Build AbyssRunner EXE
+name: Build AbyssRunner 1920 Revival Food EXE
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
           [IO.File]::WriteAllBytes("$PWD\source.zip", [Convert]::FromBase64String($b64))
           Expand-Archive -Path "$PWD\source.zip" -DestinationPath "$PWD\work" -Force
 
-      - name: Apply compile fixes
+      - name: Apply compile and behavior patches
         shell: pwsh
         run: |
           $p = ".\work\src\AbyssRunner\Vision\TemplateMatcher.cs"
@@ -38,7 +38,36 @@ jobs:
           $p = ".\work\src\AbyssRunner\Core\AutomationEngine.cs"
           $s = Get-Content $p -Raw
           $s = $s.Replace("var avg = _roundTimes.Count == 0 ? null : TimeSpan.FromMilliseconds(_roundTimes.Average(x => x.TotalMilliseconds));", "TimeSpan? avg = _roundTimes.Count == 0 ? null : TimeSpan.FromMilliseconds(_roundTimes.Average(x => x.TotalMilliseconds));")
+          $s = $s.Replace(' || !Calibrated(profile, "purchaseWarning", requireActualOcr: true)', '')
+          $s = $s.Replace('revival 버튼 템플릿/ROI, revivalContext 행동불능 근거, purchaseWarning 구매/재료 부족 근거를 모두 실제 화면으로 교정해야 합니다.', 'revival 버튼 템플릿/ROI와 revivalContext 행동불능 근거를 실제 화면으로 교정해야 합니다.')
+          $s = $s.Replace('DateTimeOffset.Now - _lastMeal >= TimeSpan.FromSeconds(4)', 'DateTimeOffset.Now - _lastMeal >= TimeSpan.FromSeconds(90)')
+          $pattern = '(?s)\s*using var after = CaptureChecked\(hwnd, out profile\);\s*var purchase = await DetectTrackedAsync\(after, profile, "purchaseWarning", ct\)\.ConfigureAwait\(false\);\s*if \(purchase\.Matched\)\s*\{.*?return StepResult\.Fail\("부활 후 구매/재료 부족 안내가 감지되어 구매하지 않고 정지"\);\s*\}'
+          $s = [regex]::Replace($s, $pattern, '')
           Set-Content $p $s -Encoding utf8
+
+      - name: Install 1920x1080 profile and templates
+        shell: pwsh
+        run: |
+          Copy-Item ".\build\targets-1920.json" ".\work\src\AbyssRunner\targets.json" -Force
+          Copy-Item ".\build\scenario-1920.json" ".\work\src\AbyssRunner\scenario.json" -Force
+
+          $img = ".\work\src\AbyssRunner\images"
+          New-Item -ItemType Directory -Force -Path $img | Out-Null
+
+          function Decode-B64([string]$source, [string]$dest) {
+            $v = (Get-Content $source -Raw).Trim()
+            [IO.File]::WriteAllBytes($dest, [Convert]::FromBase64String($v))
+          }
+
+          Decode-B64 ".\build\templates\title_husang.b64" "$img\title_husang.png"
+          Decode-B64 ".\build\templates\title_kwanggi.b64" "$img\title_kwanggi.png"
+          Decode-B64 ".\build\templates\a_enter_1920.b64" "$img\a_enter_1920.png"
+          Decode-B64 ".\build\templates\revival.b64" "$img\revival.png"
+
+          $meal = ((Get-Content ".\build\templates\meal_small.part0.b64" -Raw).Trim()) + ((Get-Content ".\build\templates\meal_small.part1.b64" -Raw).Trim())
+          [IO.File]::WriteAllBytes("$img\meal.png", [Convert]::FromBase64String($meal))
+
+          Get-Item "$img\title_husang.png","$img\title_kwanggi.png","$img\a_enter_1920.png","$img\revival.png","$img\meal.png" | Select-Object Name,Length
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
@@ -54,9 +83,21 @@ jobs:
         run: |
           dotnet publish .\work\src\AbyssRunner\AbyssRunner.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=false -p:DebugType=None -p:DebugSymbols=false -o .\dist
 
+      - name: Verify package
+        shell: pwsh
+        run: |
+          if (-not (Test-Path ".\dist\AbyssRunner.exe")) { throw "AbyssRunner.exe missing" }
+          $scenario = Get-Content ".\dist\scenario.json" -Raw | ConvertFrom-Json
+          $targets = Get-Content ".\dist\targets.json" -Raw | ConvertFrom-Json
+          if ($scenario.activeProfile -ne "1920x1080") { throw "Wrong active profile" }
+          if (-not $scenario.features.revivalAssist) { throw "Revival assist not enabled" }
+          if (-not $scenario.features.foodAssist) { throw "Food assist not enabled" }
+          if (-not $targets.profiles.'1920x1080') { throw "1920 profile missing" }
+          Get-Item ".\dist\AbyssRunner.exe" | Select-Object Name,Length
+
       - name: Upload EXE package
         uses: actions/upload-artifact@v4
         with:
-          name: AbyssRunner-win-x64
+          name: AbyssRunner-1920-revival-food
           path: dist/**
           if-no-files-found: error
