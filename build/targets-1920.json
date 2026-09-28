@@ -1,0 +1,73 @@
+{
+  "profiles": {
+    "1920x1080": {
+      "captureWidth": 1920,
+      "captureHeight": 1080,
+      "includesWindowFrame": false,
+      "defaultTemplateThreshold": 0.75,
+      "regions": {
+        "abyssMenu": [1360,410,1660,580],
+        "destinationList": [1060,80,1890,620],
+        "enterButton": [1400,900,1890,1080],
+        "resultTouch": [620,900,1300,1080],
+        "retryButton": [790,900,1110,1070],
+        "skipDialogue": [1450,0,1920,210],
+        "chatInput": [0,860,1920,1080],
+        "menuCheck": [1280,100,1910,1040],
+        "full": [0,0,1920,1080],
+        "revivalRegion": [1360,760,1885,945],
+        "revivalContextRegion": [650,90,1240,420],
+        "mealRegion": [240,15,405,155]
+      },
+      "targets": {
+        "abyssMenu": {
+          "region": "abyssMenu", "enabled": true, "minimumScore": 2, "requiredEvidence": [],
+          "ocr": {"phrases":["어비스"],"mode":"general","weight":2}
+        },
+        "destinationHusang": {
+          "region":"destinationList","enabled":true,"minimumScore":2,"requiredEvidence":["template"],
+          "template":{"files":["title_husang.png"],"threshold":0.72,"weight":2}
+        },
+        "destinationKwanggi": {
+          "region":"destinationList","enabled":true,"minimumScore":2,"requiredEvidence":["template"],
+          "template":{"files":["title_kwanggi.png"],"threshold":0.72,"weight":2}
+        },
+        "destinationMoolgil": {
+          "region":"destinationList","enabled":true,"minimumScore":2,"requiredEvidence":["template"],
+          "template":{"files":["title_moolgil.png"],"threshold":0.72,"weight":2}
+        },
+        "enter": {
+          "region":"enterButton","enabled":true,"minimumScore":3,"requiredEvidence":[],
+          "ocr":{"phrases":["이동하기","입장하기"],"mode":"general","weight":2},
+          "template":{"files":["a_enter_1920.png"],"threshold":0.72,"weight":2},
+          "color":{"mode":"greenOrBlue","weight":1,"dominance":60}
+        },
+        "resultTouch": {
+          "region":"resultTouch","enabled":true,"minimumScore":2,"requiredEvidence":[],
+          "ocr":{"phrases":["화면을 터치해 주세요","터치해"],"mode":"contains","weight":2}
+        },
+        "retry": {
+          "region":"retryButton","enabled":true,"minimumScore":3,"requiredEvidence":["ocr","green"],
+          "ocr":{"phrases":["다시 하기"],"mode":"general","weight":2},
+          "color":{"mode":"green","weight":1,"dominance":60}
+        },
+        "skipDialogue": {
+          "region":"skipDialogue","enabled":true,"minimumScore":2,"requiredEvidence":["ocr"],
+          "ocr":{"phrases":["장면 넘기기","대화 넘기기"],"mode":"general","weight":2}
+        },
+        "revival": {
+          "region":"revivalRegion","enabled":true,"minimumScore":2,"requiredEvidence":["template"],
+          "template":{"files":["revival.png"],"threshold":0.78,"weight":2}
+        },
+        "revivalContext": {
+          "region":"revivalContextRegion","enabled":true,"minimumScore":2,"requiredEvidence":["ocr"],
+          "ocr":{"phrases":["행동불능","남은 부활 횟수"],"mode":"general","weight":2}
+        },
+        "meal": {
+          "region":"mealRegion","enabled":true,"minimumScore":2,"requiredEvidence":["template"],
+          "template":{"files":["meal.png"],"threshold":0.74,"weight":2}
+        }
+      }
+    }
+  }
+}
