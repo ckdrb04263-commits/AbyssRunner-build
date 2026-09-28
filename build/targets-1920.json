@@ -33,8 +33,8 @@
           "template":{"files":["title_kwanggi.png"],"threshold":0.72,"weight":2}
         },
         "destinationMoolgil": {
-          "region":"destinationList","enabled":true,"minimumScore":2,"requiredEvidence":["template"],
-          "template":{"files":["title_moolgil.png"],"threshold":0.72,"weight":2}
+          "region":"destinationList","enabled":true,"minimumScore":2,"requiredEvidence":["ocr"],
+          "ocr":{"phrases":["흩어진 물길"],"mode":"general","weight":2}
         },
         "enter": {
           "region":"enterButton","enabled":true,"minimumScore":3,"requiredEvidence":[],
