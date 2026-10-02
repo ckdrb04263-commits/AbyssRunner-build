@@ -1,4 +1,4 @@
-name: Build AbyssRunner 1920 Challenge EXE
+name: Build AbyssRunner 1920 Modern EXE
 
 on:
   push:
@@ -49,6 +49,10 @@ jobs:
         shell: pwsh
         run: .\build\patch-challenge.ps1
 
+      - name: Apply other-dungeon loop and modern UI patch
+        shell: pwsh
+        run: .\build\patch-other-dungeon.ps1
+
       - name: Install 1920x1080 profile and templates
         shell: pwsh
         run: |
@@ -67,13 +71,14 @@ jobs:
           Decode-B64 ".\build\templates\title_kwanggi.b64" "$img\title_kwanggi.png"
           Decode-B64 ".\build\templates\a_enter_1920.b64" "$img\a_enter_1920.png"
           Decode-B64 ".\build\templates\revival.b64" "$img\revival.png"
+          Decode-B64 ".\build\templates\other_dungeon.b64" "$img\other_dungeon.png"
           $challenge = ((Get-Content ".\build\templates\challenge_confirm.part0.b64" -Raw).Trim()) + ((Get-Content ".\build\templates\challenge_confirm.part1.b64" -Raw).Trim())
           [IO.File]::WriteAllBytes("$img\challenge_confirm.png", [Convert]::FromBase64String($challenge))
 
           $meal = ((Get-Content ".\build\templates\meal_small.part0.b64" -Raw).Trim()) + ((Get-Content ".\build\templates\meal_small.part1.b64" -Raw).Trim())
           [IO.File]::WriteAllBytes("$img\meal.png", [Convert]::FromBase64String($meal))
 
-          Get-Item "$img\title_husang.png","$img\title_kwanggi.png","$img\a_enter_1920.png","$img\revival.png","$img\meal.png","$img\challenge_confirm.png" | Select-Object Name,Length
+          Get-Item "$img\title_husang.png","$img\title_kwanggi.png","$img\a_enter_1920.png","$img\revival.png","$img\meal.png","$img\challenge_confirm.png","$img\other_dungeon.png" | Select-Object Name,Length
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
@@ -103,15 +108,25 @@ jobs:
           if (-not $targets.profiles.'1920x1080') { throw "1920 profile missing" }
           if (-not $targets.profiles.'1920x1080'.targets.challengeConfirm.enabled) { throw "Challenge confirmation target missing" }
           if (-not (Test-Path ".\dist\images\challenge_confirm.png")) { throw "Challenge confirmation template missing" }
+          if (-not $targets.profiles.'1920x1080'.targets.otherDungeon.enabled) { throw "Other dungeon target missing" }
+          if (-not (Test-Path ".\dist\images\other_dungeon.png")) { throw "Other dungeon template missing" }
+          if (-not ($scenario.features.PSObject.Properties.Name -contains "otherDungeonLoop")) { throw "Other dungeon toggle setting missing" }
 
           $src = Get-Content ".\work\src\AbyssRunner\Core\AutomationEngine.cs" -Raw
           if (-not $src.Contains("HandleOptionalChallengeConfirmAsync")) { throw "Challenge behavior patch missing" }
+          if (-not $src.Contains("OtherDungeonAsync")) { throw "Other dungeon behavior patch missing" }
+
+          $cfg = Get-Content ".\work\src\AbyssRunner\Config\ConfigModels.cs" -Raw
+          if (-not $cfg.Contains("OtherDungeonLoop")) { throw "Other dungeon config model missing" }
+
+          $ui = Get-Content ".\work\src\AbyssRunner\UI\MainForm.cs" -Raw
+          if (-not $ui.Contains("ABYSS RUNNER") -or -not $ui.Contains("_otherDungeon")) { throw "Modern UI patch missing" }
 
           Get-Item ".\dist\AbyssRunner.exe" | Select-Object Name,Length
 
       - name: Upload EXE package
         uses: actions/upload-artifact@v4
         with:
-          name: AbyssRunner-1920-challenge
+          name: AbyssRunner-1920-other-dungeon-modern
           path: dist/**
           if-no-files-found: error
