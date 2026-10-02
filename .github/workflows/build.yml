@@ -67,7 +67,8 @@ jobs:
           Decode-B64 ".\build\templates\title_kwanggi.b64" "$img\title_kwanggi.png"
           Decode-B64 ".\build\templates\a_enter_1920.b64" "$img\a_enter_1920.png"
           Decode-B64 ".\build\templates\revival.b64" "$img\revival.png"
-          Decode-B64 ".\build\templates\challenge_confirm.b64" "$img\challenge_confirm.png"
+          $challenge = ((Get-Content ".\build\templates\challenge_confirm.part0.b64" -Raw).Trim()) + ((Get-Content ".\build\templates\challenge_confirm.part1.b64" -Raw).Trim())
+          [IO.File]::WriteAllBytes("$img\challenge_confirm.png", [Convert]::FromBase64String($challenge))
 
           $meal = ((Get-Content ".\build\templates\meal_small.part0.b64" -Raw).Trim()) + ((Get-Content ".\build\templates\meal_small.part1.b64" -Raw).Trim())
           [IO.File]::WriteAllBytes("$img\meal.png", [Convert]::FromBase64String($meal))
