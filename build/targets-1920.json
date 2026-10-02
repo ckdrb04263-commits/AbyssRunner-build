@@ -83,6 +83,12 @@
           650,
           1350,
           1040
+        ],
+        "otherDungeon": [
+          1050,
+          920,
+          1360,
+          1080
         ]
       },
       "targets": {
@@ -287,6 +293,28 @@
               "도전하기"
             ],
             "mode": "contains",
+            "weight": 1
+          }
+        },
+        "otherDungeon": {
+          "region": "otherDungeon",
+          "enabled": true,
+          "minimumScore": 2,
+          "requiredEvidence": [
+            "template"
+          ],
+          "template": {
+            "files": [
+              "other_dungeon.png"
+            ],
+            "threshold": 0.78,
+            "weight": 2
+          },
+          "ocr": {
+            "phrases": [
+              "다른 던전 가기"
+            ],
+            "mode": "general",
             "weight": 1
           }
         }
