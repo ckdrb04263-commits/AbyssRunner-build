@@ -9,15 +9,9 @@ $new1 = 'if (await IsGoneStableAsync(hwnd, "enter", 2, ct).ConfigureAwait(false)
 if (-not $s.Contains($old1)) { throw 'Enter early-transition patch point not found' }
 $s = $s.Replace($old1, $new1)
 
-$old2 = @'
-            if (await IsGoneStableAsync(hwnd, "enter", 2, ct).ConfigureAwait(false))
-            {
-                _roundStarted = DateTimeOffset.Now;
-                return StepResult.Ok();
-            }
-'@
-$new2 = @'
-            if (await IsGoneStableAsync(hwnd, "enter", 2, ct).ConfigureAwait(false))
+$pattern2 = 'if \(await IsGoneStableAsync\(hwnd, "enter", 2, ct\)\.ConfigureAwait\(false\)\)\s*\{\s*_roundStarted = DateTimeOffset\.Now;\s*return StepResult\.Ok\(\);\s*\}'
+$replace2 = @'
+if (await IsGoneStableAsync(hwnd, "enter", 2, ct).ConfigureAwait(false))
             {
                 var confirm = await HandleOptionalChallengeConfirmAsync(hwnd, ct).ConfigureAwait(false);
                 if (confirm.Outcome != StepOutcome.Success) return confirm;
@@ -25,8 +19,9 @@ $new2 = @'
                 return StepResult.Ok(confirm.Reason);
             }
 '@
-if (-not $s.Contains($old2)) { throw 'Enter post-SPACE patch point not found' }
-$s = $s.Replace($old2, $new2)
+$before2 = $s
+$s = [regex]::Replace($s, $pattern2, $replace2, 1)
+if ($s -eq $before2) { throw 'Enter post-SPACE patch point not found' }
 
 $old3 = 'if (await IsGoneStableAsync(hwnd, "retry", 2, ct).ConfigureAwait(false)) return StepResult.Ok();'
 $new3 = 'if (await IsGoneStableAsync(hwnd, "retry", 2, ct).ConfigureAwait(false)) { var confirm = await HandleOptionalChallengeConfirmAsync(hwnd, ct).ConfigureAwait(false); if (confirm.Outcome != StepOutcome.Success) return confirm; return StepResult.Ok(confirm.Reason); }'
