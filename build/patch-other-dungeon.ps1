@@ -92,7 +92,7 @@ $s = Get-Content $p -Raw
 
 if (-not $s.Contains('private readonly CheckBox _otherDungeon')) {
   $needle = '    private readonly CheckBox _autoResume = new() { Text = "오류 후 10분 자동 재개" };'
-  $insert = $needle + "`r`n    private readonly CheckBox _otherDungeon = new() { Text = \"다른 던전 반복\", Appearance = Appearance.Button, TextAlign = ContentAlignment.MiddleCenter, Width = 150, Height = 32, FlatStyle = FlatStyle.Flat };"
+  $insert = $needle + "`r`n    private readonly CheckBox _otherDungeon = new() { Text = `"다른 던전 반복`", Appearance = Appearance.Button, TextAlign = ContentAlignment.MiddleCenter, Width = 150, Height = 32, FlatStyle = FlatStyle.Flat };"
   if (-not $s.Contains($needle)) { throw 'MainForm field patch point not found' }
   $s = $s.Replace($needle, $insert)
 }
