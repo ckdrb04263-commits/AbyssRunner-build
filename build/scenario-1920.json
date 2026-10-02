@@ -1,9 +1,43 @@
 {
-  "activeProfile":"1920x1080",
-  "uiScaleLabel":"1920×1080 / 여기서 부활 / 음식 아이콘",
-  "timeouts":{"generalSeconds":20,"retrySeconds":60,"combatSeconds":600,"pollGeneralMinMs":380,"pollGeneralMaxMs":520,"pollCombatMinMs":620,"pollCombatMaxMs":800},
-  "input":{"provider":"Interception","keyboardDevice":1,"mouseDevice":11,"keyHoldMinMs":40,"keyHoldMaxMs":110,"mouseHoldMinMs":30,"mouseHoldMaxMs":110,"cursorTolerancePx":8},
-  "features":{"foodAssist":true,"revivalAssist":true,"reconnectAssist":false,"skipDialogueAssist":true},
-  "autoResume":{"enabled":false,"errorWaitMinutes":10,"userIdleMinutes":10,"stableSamples":3,"sampleIntervalMs":250,"countdownSeconds":3},
-  "logging":{"maxFileMb":8,"maxFiles":6,"maxDiagnostics":80}
+  "activeProfile": "1920x1080",
+  "uiScaleLabel": "1920×1080 / 여기서 부활 / 음식 아이콘",
+  "timeouts": {
+    "generalSeconds": 20,
+    "retrySeconds": 60,
+    "combatSeconds": 600,
+    "pollGeneralMinMs": 380,
+    "pollGeneralMaxMs": 520,
+    "pollCombatMinMs": 620,
+    "pollCombatMaxMs": 800
+  },
+  "input": {
+    "provider": "Interception",
+    "keyboardDevice": 1,
+    "mouseDevice": 11,
+    "keyHoldMinMs": 40,
+    "keyHoldMaxMs": 110,
+    "mouseHoldMinMs": 30,
+    "mouseHoldMaxMs": 110,
+    "cursorTolerancePx": 8
+  },
+  "features": {
+    "foodAssist": true,
+    "revivalAssist": true,
+    "reconnectAssist": false,
+    "skipDialogueAssist": true,
+    "otherDungeonLoop": false
+  },
+  "autoResume": {
+    "enabled": false,
+    "errorWaitMinutes": 10,
+    "userIdleMinutes": 10,
+    "stableSamples": 3,
+    "sampleIntervalMs": 250,
+    "countdownSeconds": 3
+  },
+  "logging": {
+    "maxFileMb": 8,
+    "maxFiles": 6,
+    "maxDiagnostics": 80
+  }
 }
