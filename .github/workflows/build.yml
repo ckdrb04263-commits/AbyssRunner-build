@@ -1,4 +1,4 @@
-name: Build AbyssRunner 1920 Revival Food EXE
+name: Build AbyssRunner 1920 Challenge EXE
 
 on:
   push:
@@ -43,74 +43,11 @@ jobs:
           $s = $s.Replace('DateTimeOffset.Now - _lastMeal >= TimeSpan.FromSeconds(4)', 'DateTimeOffset.Now - _lastMeal >= TimeSpan.FromSeconds(90)')
           $pattern = '(?s)\s*using var after = CaptureChecked\(hwnd, out profile\);\s*var purchase = await DetectTrackedAsync\(after, profile, "purchaseWarning", ct\)\.ConfigureAwait\(false\);\s*if \(purchase\.Matched\)\s*\{.*?return StepResult\.Fail\("부활 후 구매/재료 부족 안내가 감지되어 구매하지 않고 정지"\);\s*\}'
           $s = [regex]::Replace($s, $pattern, '')
-
-          # Optional "도전하기" confirmation: if it appears, click it; if absent, continue normally.
-          $old = 'if (await IsGoneStableAsync(hwnd, "enter", 2, ct).ConfigureAwait(false)) return StepResult.Ok("사용자 동작/화면 전환으로 입장하기가 사라짐");'
-          $new = 'if (await IsGoneStableAsync(hwnd, "enter", 2, ct).ConfigureAwait(false)) { var confirm = await HandleOptionalChallengeConfirmAsync(hwnd, ct).ConfigureAwait(false); if (confirm.Outcome != StepOutcome.Success) return confirm; _roundStarted = DateTimeOffset.Now; return StepResult.Ok(confirm.Reason); }'
-          $s = $s.Replace($old, $new)
-
-          $old = @'
-            if (await IsGoneStableAsync(hwnd, "enter", 2, ct).ConfigureAwait(false))
-            {
-                _roundStarted = DateTimeOffset.Now;
-                return StepResult.Ok();
-            }
-'@
-          $new = @'
-            if (await IsGoneStableAsync(hwnd, "enter", 2, ct).ConfigureAwait(false))
-            {
-                var confirm = await HandleOptionalChallengeConfirmAsync(hwnd, ct).ConfigureAwait(false);
-                if (confirm.Outcome != StepOutcome.Success) return confirm;
-                _roundStarted = DateTimeOffset.Now;
-                return StepResult.Ok(confirm.Reason);
-            }
-'@
-          $s = $s.Replace($old, $new)
-
-          $old = 'if (await IsGoneStableAsync(hwnd, "retry", 2, ct).ConfigureAwait(false)) return StepResult.Ok();'
-          $new = 'if (await IsGoneStableAsync(hwnd, "retry", 2, ct).ConfigureAwait(false)) { var confirm = await HandleOptionalChallengeConfirmAsync(hwnd, ct).ConfigureAwait(false); if (confirm.Outcome != StepOutcome.Success) return confirm; return StepResult.Ok(confirm.Reason); }'
-          $s = $s.Replace($old, $new)
-
-          $marker = '    private async Task<StepResult> RetrySameDetectedActionAsync(nint hwnd, string target, string next, int additionalAttempts, CancellationToken ct)'
-          $helper = @'
-    private async Task<StepResult> HandleOptionalChallengeConfirmAsync(nint hwnd, CancellationToken ct)
-    {
-        var deadline = DateTime.UtcNow.AddSeconds(4);
-        var attempts = 0;
-        while (DateTime.UtcNow < deadline)
-        {
-            ct.ThrowIfCancellationRequested();
-            using var shot = CaptureChecked(hwnd, out var profile);
-            var confirm = await DetectTrackedAsync(shot, profile, "challengeConfirm", ct).ConfigureAwait(false);
-            if (!confirm.Matched)
-            {
-                await Task.Delay(220, ct).ConfigureAwait(false);
-                continue;
-            }
-
-            LogDetection("challengeConfirm", confirm);
-            if (confirm.ClickBounds is not Rectangle click) return StepResult.Fail("도전하기 위치 없음");
-            if (attempts >= 3) return StepResult.Fail("도전하기 재시도 한도 초과");
-            attempts++;
-
-            var action = await _input.ClickAsync(click, hwnd, ct).ConfigureAwait(false);
-            RememberInput("click:challengeConfirm", action);
-            _log.Write(_stage, "click", new { target = "challengeConfirm", action.Success, action.WindowLocalPoint, action.Reason, attempt = attempts });
-            if (!action.Success) return StepResult.Fail("도전하기 입력 실패: " + action.Reason);
-
-            await Task.Delay(Random.Shared.Next(350, 601), ct).ConfigureAwait(false);
-            if (await IsGoneStableAsync(hwnd, "challengeConfirm", 2, ct).ConfigureAwait(false))
-                return StepResult.Ok("도전 팝업 처리");
-        }
-
-        return StepResult.Ok("도전 팝업 없음");
-    }
-
-'@
-          if (-not $s.Contains('HandleOptionalChallengeConfirmAsync')) {
-            $s = $s.Replace($marker, $helper + $marker)
-          }
           Set-Content $p $s -Encoding utf8
+
+      - name: Apply optional challenge confirmation patch
+        shell: pwsh
+        run: .\build\patch-challenge.ps1
 
       - name: Install 1920x1080 profile and templates
         shell: pwsh
@@ -155,19 +92,25 @@ jobs:
         shell: pwsh
         run: |
           if (-not (Test-Path ".\dist\AbyssRunner.exe")) { throw "AbyssRunner.exe missing" }
+
           $scenario = Get-Content ".\dist\scenario.json" -Raw | ConvertFrom-Json
           $targets = Get-Content ".\dist\targets.json" -Raw | ConvertFrom-Json
+
           if ($scenario.activeProfile -ne "1920x1080") { throw "Wrong active profile" }
           if (-not $scenario.features.revivalAssist) { throw "Revival assist not enabled" }
           if (-not $scenario.features.foodAssist) { throw "Food assist not enabled" }
           if (-not $targets.profiles.'1920x1080') { throw "1920 profile missing" }
           if (-not $targets.profiles.'1920x1080'.targets.challengeConfirm.enabled) { throw "Challenge confirmation target missing" }
           if (-not (Test-Path ".\dist\images\challenge_confirm.png")) { throw "Challenge confirmation template missing" }
+
+          $src = Get-Content ".\work\src\AbyssRunner\Core\AutomationEngine.cs" -Raw
+          if (-not $src.Contains("HandleOptionalChallengeConfirmAsync")) { throw "Challenge behavior patch missing" }
+
           Get-Item ".\dist\AbyssRunner.exe" | Select-Object Name,Length
 
       - name: Upload EXE package
         uses: actions/upload-artifact@v4
         with:
-          name: AbyssRunner-1920-revival-food-challenge
+          name: AbyssRunner-1920-challenge
           path: dist/**
           if-no-files-found: error
