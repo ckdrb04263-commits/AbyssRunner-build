@@ -232,13 +232,13 @@
           "enabled": true,
           "minimumScore": 2,
           "requiredEvidence": [
-            "template"
+            "ocr"
           ],
-          "template": {
-            "files": [
-              "revival.png"
+          "ocr": {
+            "phrases": [
+              "여기서 부활"
             ],
-            "threshold": 0.78,
+            "mode": "contains",
             "weight": 2
           }
         },
