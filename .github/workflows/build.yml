@@ -1,4 +1,4 @@
-name: Build AbyssRunner 1920 Modern EXE
+name: Build AbyssRunner 1920 Stable Click EXE
 
 on:
   push:
@@ -52,6 +52,10 @@ jobs:
       - name: Apply other-dungeon loop and modern UI patch
         shell: pwsh
         run: .\build\patch-other-dungeon.ps1
+
+      - name: Apply click stability patch
+        shell: pwsh
+        run: .\build\patch-click-stability.ps1
 
       - name: Install 1920x1080 profile and templates
         shell: pwsh
@@ -117,6 +121,10 @@ jobs:
           $src = Get-Content ".\work\src\AbyssRunner\Core\AutomationEngine.cs" -Raw
           if (-not $src.Contains("HandleOptionalChallengeConfirmAsync")) { throw "Challenge behavior patch missing" }
           if (-not $src.Contains("OtherDungeonAsync")) { throw "Other dungeon behavior patch missing" }
+          if (-not $src.Contains("result-touch-verified-retry")) { throw "Verified result click retry patch missing" }
+
+          $inputSrc = Get-Content ".\work\src\AbyssRunner\Input\InterceptionInputController.cs" -Raw
+          if (-not $inputSrc.Contains("PickStablePointInside") -or -not $inputSrc.Contains("stableHoldMin")) { throw "Stable click patch missing" }
 
           $cfg = Get-Content ".\work\src\AbyssRunner\Config\ConfigModels.cs" -Raw
           if (-not $cfg.Contains("OtherDungeonLoop")) { throw "Other dungeon config model missing" }
@@ -129,6 +137,6 @@ jobs:
       - name: Upload EXE package
         uses: actions/upload-artifact@v4
         with:
-          name: AbyssRunner-1920-other-dungeon-modern
+          name: AbyssRunner-1920-stable-click
           path: dist/**
           if-no-files-found: error
