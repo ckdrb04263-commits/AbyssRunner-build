@@ -325,9 +325,9 @@ public sealed class MainForm : Form
             if (_uiRunStarted is DateTimeOffset started && _cts is not null)
             {
                 var elapsed = DateTimeOffset.Now - started;
-                _elapsedValue.Text = $"◷  총 실행  {elapsed:hh\:mm\:ss}";
+                _elapsedValue.Text = $"◷  총 실행  {elapsed:hh\\:mm\\:ss}";
                 if (_roundUiStarted is DateTimeOffset round)
-                    _battleValue.Text = $"{DateTimeOffset.Now - round:mm\:ss}";
+                    _battleValue.Text = $"{DateTimeOffset.Now - round:mm\\:ss}";
             }
         };
         _metricsTimer.Start();
@@ -476,8 +476,8 @@ public sealed class MainForm : Form
             _engine.MetricsChanged += (count, elapsed, average) => Ui(() =>
             {
                 _countValue.Text = $"{count}판";
-                _elapsedValue.Text = $"◷  총 실행  {elapsed:hh\:mm\:ss}";
-                _averageValue.Text = average is null ? "--:--" : $"{average.Value:mm\:ss}";
+                _elapsedValue.Text = $"◷  총 실행  {elapsed:hh\\:mm\\:ss}";
+                _averageValue.Text = average is null ? "--:--" : $"{average.Value:mm\\:ss}";
             });
 
             _cts = new CancellationTokenSource();
@@ -545,7 +545,7 @@ public sealed class MainForm : Form
 
         if (stage == RunStage.WaitResult && _roundUiStarted is null) _roundUiStarted = DateTimeOffset.Now;
         if (stage == RunStage.SelectDestination || stage == RunStage.WaitResult) _roundUiStarted ??= DateTimeOffset.Now;
-        if (stage == RunStage.Retry) _battleValue.Text = _roundUiStarted is null ? "--:--" : $"{DateTimeOffset.Now - _roundUiStarted.Value:mm\:ss}";
+        if (stage == RunStage.Retry) _battleValue.Text = _roundUiStarted is null ? "--:--" : $"{DateTimeOffset.Now - _roundUiStarted.Value:mm\\:ss}";
         if (stage == RunStage.SelectDestination && _otherDungeon.Checked) _roundUiStarted = DateTimeOffset.Now;
     }
 
