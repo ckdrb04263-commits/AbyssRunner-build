@@ -1,4 +1,4 @@
-name: Build AbyssRunner 1920 Stable Click EXE
+name: Build AbyssRunner Reference UI Stable Click EXE
 
 on:
   push:
@@ -52,6 +52,10 @@ jobs:
       - name: Apply other-dungeon loop and modern UI patch
         shell: pwsh
         run: .\build\patch-other-dungeon.ps1
+
+      - name: Install reference-style light dashboard UI
+        shell: pwsh
+        run: Copy-Item ".\build\MainForm.reference.cs" ".\work\src\AbyssRunner\UI\MainForm.cs" -Force
 
       - name: Apply click stability patch
         shell: pwsh
@@ -129,13 +133,13 @@ jobs:
           if (-not $cfg.Contains("OtherDungeonLoop")) { throw "Other dungeon config model missing" }
 
           $ui = Get-Content ".\work\src\AbyssRunner\UI\MainForm.cs" -Raw
-          if (-not $ui.Contains("ABYSS RUNNER") -or -not $ui.Contains("_otherDungeon")) { throw "Modern UI patch missing" }
+          if (-not $ui.Contains("전투가 끝나기를 기다리고 있어요") -or -not $ui.Contains("ToggleSwitch") -or -not $ui.Contains("_otherDungeon")) { throw "Reference dashboard UI missing" }
 
           Get-Item ".\dist\AbyssRunner.exe" | Select-Object Name,Length
 
       - name: Upload EXE package
         uses: actions/upload-artifact@v4
         with:
-          name: AbyssRunner-1920-stable-click
+          name: AbyssRunner-reference-ui-stable-click
           path: dist/**
           if-no-files-found: error
