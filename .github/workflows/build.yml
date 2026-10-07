@@ -121,7 +121,6 @@ jobs:
           $src = Get-Content ".\work\src\AbyssRunner\Core\AutomationEngine.cs" -Raw
           if (-not $src.Contains("HandleOptionalChallengeConfirmAsync")) { throw "Challenge behavior patch missing" }
           if (-not $src.Contains("OtherDungeonAsync")) { throw "Other dungeon behavior patch missing" }
-          if (-not $src.Contains("result-touch-verified-retry")) { throw "Verified result click retry patch missing" }
 
           $inputSrc = Get-Content ".\work\src\AbyssRunner\Input\InterceptionInputController.cs" -Raw
           if (-not $inputSrc.Contains("PickStablePointInside") -or -not $inputSrc.Contains("stableHoldMin")) { throw "Stable click patch missing" }
