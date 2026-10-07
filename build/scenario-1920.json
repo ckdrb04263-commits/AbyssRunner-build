@@ -16,8 +16,8 @@
     "mouseDevice": 11,
     "keyHoldMinMs": 40,
     "keyHoldMaxMs": 110,
-    "mouseHoldMinMs": 30,
-    "mouseHoldMaxMs": 110,
+    "mouseHoldMinMs": 90,
+    "mouseHoldMaxMs": 140,
     "cursorTolerancePx": 8
   },
   "features": {
