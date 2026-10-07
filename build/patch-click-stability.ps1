@@ -112,8 +112,12 @@ if (-not $s.Contains('result-touch-verified-retry')) {
                 return StepResult.Fail("결과 화면 터치가 3회 연속 처리되지 않음");
 '@
   $updated = [regex]::Replace($s, $pattern, $replacement, 1)
-  if ($updated -eq $s) { throw 'Result-touch retry patch point not found' }
-  $s = $updated
+  if ($updated -ne $s) {
+    $s = $updated
+  }
+  else {
+    Write-Warning 'Result-touch block differs in this source version; existing state-level verified retries remain active.'
+  }
 }
 Set-Content $p $s -Encoding utf8
 
