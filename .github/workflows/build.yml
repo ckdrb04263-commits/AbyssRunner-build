@@ -1,4 +1,4 @@
-name: Build AbyssRunner Reference UI Stable Click Revival OCR EXE
+name: Build AbyssRunner Loot Dashboard EXE
 
 on:
   push:
@@ -63,6 +63,10 @@ jobs:
         shell: pwsh
         run: .\build\patch-click-stability.ps1
 
+      - name: Apply loot OCR tracking patch
+        shell: pwsh
+        run: .\build\patch-loot.ps1
+
       - name: Install 1920x1080 profile and templates
         shell: pwsh
         run: |
@@ -122,6 +126,7 @@ jobs:
           if (-not ($revivalTarget.ocr.phrases -contains "여기서 부활")) { throw "Revival OCR phrase missing" }
           if (-not $scenario.features.foodAssist) { throw "Food assist not enabled" }
           if (-not $targets.profiles.'1920x1080') { throw "1920 profile missing" }
+          if (-not $targets.profiles.'1920x1080'.regions.lootRegion) { throw "Loot OCR region missing" }
           if (-not $targets.profiles.'1920x1080'.targets.challengeConfirm.enabled) { throw "Challenge confirmation target missing" }
           if (-not (Test-Path ".\dist\images\challenge_confirm.png")) { throw "Challenge confirmation template missing" }
           if (-not $targets.profiles.'1920x1080'.targets.otherDungeon.enabled) { throw "Other dungeon target missing" }
@@ -131,6 +136,8 @@ jobs:
           $src = Get-Content ".\work\src\AbyssRunner\Core\AutomationEngine.cs" -Raw
           if (-not $src.Contains("HandleOptionalChallengeConfirmAsync")) { throw "Challenge behavior patch missing" }
           if (-not $src.Contains("OtherDungeonAsync")) { throw "Other dungeon behavior patch missing" }
+          if (-not $src.Contains("LootUpdated") -or -not $src.Contains("RecordLootIfAvailableAsync")) { throw "Loot tracking engine patch missing" }
+          if (-not (Test-Path ".\work\src\AbyssRunner\Core\LootTracker.cs")) { throw "LootTracker source missing" }
 
           $inputSrc = Get-Content ".\work\src\AbyssRunner\Input\InterceptionInputController.cs" -Raw
           if (-not $inputSrc.Contains("PickStablePointInside") -or -not $inputSrc.Contains("stableHoldMin")) { throw "Stable click patch missing" }
@@ -140,12 +147,13 @@ jobs:
 
           $ui = Get-Content ".\work\src\AbyssRunner\UI\MainForm.cs" -Raw
           if (-not $ui.Contains("전투가 끝나기를 기다리고 있어요") -or -not $ui.Contains("ToggleSwitch") -or -not $ui.Contains("_otherDungeon")) { throw "Reference dashboard UI missing" }
+          if (-not $ui.Contains("최근 획득 아이템") -or -not $ui.Contains("이번 실행 누적 획득량") -or -not $ui.Contains("LootUpdated")) { throw "Loot dashboard UI missing" }
 
           Get-Item ".\dist\AbyssRunner.exe" | Select-Object Name,Length
 
       - name: Upload EXE package
         uses: actions/upload-artifact@v4
         with:
-          name: AbyssRunner-reference-ui-stable-click-revival-ocr
+          name: AbyssRunner-loot-dashboard
           path: dist/**
           if-no-files-found: error
