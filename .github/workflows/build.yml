@@ -1,4 +1,4 @@
-name: Build AbyssRunner Loot Dashboard EXE
+name: Build AbyssRunner Loot Dashboard V2 EXE
 
 on:
   push:
@@ -127,6 +127,8 @@ jobs:
           if (-not $scenario.features.foodAssist) { throw "Food assist not enabled" }
           if (-not $targets.profiles.'1920x1080') { throw "1920 profile missing" }
           if (-not $targets.profiles.'1920x1080'.regions.lootRegion) { throw "Loot OCR region missing" }
+          if (-not $targets.profiles.'1920x1080'.targets.lootHeader.enabled) { throw "Loot header OCR target missing" }
+          if (-not ($targets.profiles.'1920x1080'.targets.lootHeader.ocr.phrases -contains "발견한 전리품")) { throw "Loot header phrase missing" }
           if (-not $targets.profiles.'1920x1080'.targets.challengeConfirm.enabled) { throw "Challenge confirmation target missing" }
           if (-not (Test-Path ".\dist\images\challenge_confirm.png")) { throw "Challenge confirmation template missing" }
           if (-not $targets.profiles.'1920x1080'.targets.otherDungeon.enabled) { throw "Other dungeon target missing" }
@@ -137,6 +139,7 @@ jobs:
           if (-not $src.Contains("HandleOptionalChallengeConfirmAsync")) { throw "Challenge behavior patch missing" }
           if (-not $src.Contains("OtherDungeonAsync")) { throw "Other dungeon behavior patch missing" }
           if (-not $src.Contains("LootUpdated") -or -not $src.Contains("RecordLootIfAvailableAsync")) { throw "Loot tracking engine patch missing" }
+          if (-not $src.Contains("loot-header") -or -not $src.Contains("발견한 전리품 OCR 미감지")) { throw "Loot header gating patch missing" }
           if (-not (Test-Path ".\work\src\AbyssRunner\Core\LootTracker.cs")) { throw "LootTracker source missing" }
 
           $inputSrc = Get-Content ".\work\src\AbyssRunner\Input\InterceptionInputController.cs" -Raw
@@ -154,6 +157,6 @@ jobs:
       - name: Upload EXE package
         uses: actions/upload-artifact@v4
         with:
-          name: AbyssRunner-loot-dashboard
+          name: AbyssRunner-loot-dashboard-v2
           path: dist/**
           if-no-files-found: error
