@@ -57,30 +57,45 @@ private async Task<StepResult> RetryAsync(nint hwnd, CancellationToken ct)
     {
         try
         {
-            using var shot = CaptureChecked(hwnd, out var profile);
-            if (!profile.Regions.TryGetValue("lootRegion", out var lootRect))
+            for (var sample = 1; sample <= 4; sample++)
             {
-                _log.Write(_stage, "loot-skip", new { reason = "lootRegion 없음" });
+                using var shot = CaptureChecked(hwnd, out var profile);
+                var header = await _detector.DetectAsync(shot, profile, "lootHeader", ct).ConfigureAwait(false);
+                _log.Write(_stage, "loot-header", new { sample, header.Matched, header.ActualOcr, header.Score });
+
+                if (!header.Matched)
+                {
+                    if (sample < 4) await Task.Delay(250, ct).ConfigureAwait(false);
+                    continue;
+                }
+
+                if (!profile.Regions.TryGetValue("lootRegion", out var lootRect))
+                {
+                    _log.Write(_stage, "loot-skip", new { reason = "lootRegion 없음" });
+                    return;
+                }
+
+                var snapshot = await _lootTracker.CaptureAsync(
+                    shot,
+                    lootRect.ToRectangle(),
+                    _activeDestination,
+                    _completed + 1,
+                    ct).ConfigureAwait(false);
+
+                LootUpdated?.Invoke(snapshot);
+                _log.Write(_stage, "loot-recorded", new
+                {
+                    round = snapshot.Round,
+                    destination = snapshot.Destination,
+                    items = snapshot.Recent.Select(x => new { x.Name, x.Quantity, x.Recognized }).ToArray(),
+                    totals = snapshot.Totals,
+                    snapshot.ScreenshotPath,
+                    rawOcr = snapshot.RawOcr
+                });
                 return;
             }
 
-            var snapshot = await _lootTracker.CaptureAsync(
-                shot,
-                lootRect.ToRectangle(),
-                _activeDestination,
-                _completed + 1,
-                ct).ConfigureAwait(false);
-
-            LootUpdated?.Invoke(snapshot);
-            _log.Write(_stage, "loot-recorded", new
-            {
-                round = snapshot.Round,
-                destination = snapshot.Destination,
-                items = snapshot.Recent.Select(x => new { x.Name, x.Quantity, x.Recognized }).ToArray(),
-                totals = snapshot.Totals,
-                snapshot.ScreenshotPath,
-                rawOcr = snapshot.RawOcr
-            });
+            _log.Write(_stage, "loot-skip", new { reason = "발견한 전리품 OCR 미감지" });
         }
         catch (OperationCanceledException) { throw; }
         catch (Exception ex)
