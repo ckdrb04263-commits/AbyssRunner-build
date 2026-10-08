@@ -39,16 +39,15 @@ if (-not $s.Contains('_lootTracker.ResetSession();')) {
 }
 
 if (-not $s.Contains('RecordLootIfAvailableAsync')) {
-    $call = 'return await WaitForTargetAsync(hwnd, "retry", _config.App.Timeouts.RetrySeconds, ct).ConfigureAwait(false);'
-    if (-not $s.Contains($call)) { throw 'Loot result capture patch point not found' }
-
-    $replacement = @'
-                var rewardReady = await WaitForTargetAsync(hwnd, "retry", _config.App.Timeouts.RetrySeconds, ct).ConfigureAwait(false);
-                if (rewardReady.Outcome == StepOutcome.Success)
-                    await RecordLootIfAvailableAsync(hwnd, ct).ConfigureAwait(false);
-                return rewardReady;
+    $retryPattern = 'private async Task<StepResult> RetryAsync\(nint hwnd, CancellationToken ct\)\s*\{'
+    $retryReplacement = @'
+private async Task<StepResult> RetryAsync(nint hwnd, CancellationToken ct)
+    {
+        await RecordLootIfAvailableAsync(hwnd, ct).ConfigureAwait(false);
 '@
-    $s = $s.Replace($call, $replacement)
+    $updated = [regex]::Replace($s, $retryPattern, $retryReplacement, 1)
+    if ($updated -eq $s) { throw 'Loot RetryAsync patch point not found' }
+    $s = $updated
 
     $marker = '    private async Task<StepResult> RetryAsync(nint hwnd, CancellationToken ct)'
     if (-not $s.Contains($marker)) { throw 'Loot helper insertion point not found' }
