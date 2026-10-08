@@ -25,6 +25,15 @@ public sealed class LootTracker
         "나가기", "다시", "하기", "다른", "던전", "가기", "매우", "어려움", "순수", "전투", "시간"
     };
 
+    private static readonly string[] KnownItems =
+    {
+        "모험가 포인트",
+        "골드",
+        "하트 토큰",
+        "마물 퇴치 증표",
+        "허상의 마력석"
+    };
+
     private readonly string _baseDir;
     private readonly string _csvPath;
     private readonly string _unknownDir;
@@ -91,64 +100,93 @@ public sealed class LootTracker
         var tokens = hits
             .Select(x => new Token(Clean(x.Text), x.Bounds))
             .Where(x => x.Text.Length > 0)
-            .Where(x => !x.Text.Any(char.IsWhiteSpace))
             .Where(x => x.Bounds.Width >= 3 && x.Bounds.Height >= 5)
-            .Where(x => x.Bounds.Width <= 230 && x.Bounds.Height <= 100)
+            .Where(x => x.Bounds.Width <= 280 && x.Bounds.Height <= 110)
             .Where(x => region.IntersectsWith(x.Bounds))
-            .GroupBy(x => (x.Text, x.Bounds.Left / 4, x.Bounds.Top / 4))
+            .GroupBy(x => (TextMatcher.Normalize(x.Text), x.Bounds.Left / 4, x.Bounds.Top / 4))
             .Select(g => g.First())
             .ToList();
 
         var numbers = tokens
             .Select(x => (Token: x, Qty: TryQuantity(x.Text)))
             .Where(x => x.Qty is not null && x.Qty > 0)
-            .OrderBy(x => CenterX(x.Token.Bounds))
             .ToList();
 
         var items = new List<LootItemRecord>();
-        var claimedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var maxDistance = Math.Clamp(region.Width / 12, 70, 105);
+        var matchedTokenIndexes = new HashSet<int>();
 
-        foreach (var number in numbers)
+        foreach (var known in KnownItems)
         {
-            var nx = CenterX(number.Token.Bounds);
-            var nameParts = tokens
-                .Where(t => t != number.Token)
-                .Where(t => HasHangulRegex.IsMatch(t.Text))
-                .Where(t => !IsIgnored(t.Text))
-                .Where(t => Math.Abs(CenterX(t.Bounds) - nx) <= maxDistance)
-                .Where(t => t.Bounds.Top >= number.Token.Bounds.Top - 35)
-                .OrderBy(t => t.Bounds.Top)
-                .ThenBy(t => t.Bounds.Left)
-                .Select(t => t.Text)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
+            var candidates = tokens
+                .Select((t, index) => (Token: t, Index: index))
+                .Where(x => HasHangulRegex.IsMatch(x.Token.Text))
+                .Where(x => TextMatcher.IsMatch(x.Token.Text, known, "general") ||
+                            TextMatcher.Normalize(known).Contains(TextMatcher.Normalize(x.Token.Text), StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(x => x.Token.Bounds.Width)
                 .ToList();
 
-            if (nameParts.Count == 0) continue;
+            if (candidates.Count == 0)
+            {
+                // OCR may split a label into words. Rebuild short horizontal groups and compare the joined text.
+                var hangul = tokens
+                    .Select((t, index) => (Token: t, Index: index))
+                    .Where(x => HasHangulRegex.IsMatch(x.Token.Text) && !IsIgnored(x.Token.Text))
+                    .OrderBy(x => x.Token.Bounds.Left)
+                    .ToList();
 
-            var name = NormalizeName(string.Join(" ", nameParts));
-            if (name.Length < 2 || claimedNames.Contains(name)) continue;
+                for (var i = 0; i < hangul.Count; i++)
+                {
+                    for (var j = i; j < Math.Min(hangul.Count, i + 4); j++)
+                    {
+                        var group = hangul.Skip(i).Take(j - i + 1).ToList();
+                        var topSpread = group.Max(x => x.Token.Bounds.Top) - group.Min(x => x.Token.Bounds.Top);
+                        if (topSpread > 36) continue;
 
-            claimedNames.Add(name);
-            items.Add(new LootItemRecord(name, number.Qty, true));
+                        var joined = string.Join(" ", group.Select(x => x.Token.Text));
+                        if (!TextMatcher.IsMatch(joined, known, "general") &&
+                            !TextMatcher.Normalize(joined).Contains(TextMatcher.Normalize(known), StringComparison.OrdinalIgnoreCase))
+                            continue;
+
+                        candidates.Add((group[0].Token, group[0].Index));
+                        break;
+                    }
+                    if (candidates.Count > 0) break;
+                }
+            }
+
+            if (candidates.Count == 0) continue;
+
+            var match = candidates[0];
+            matchedTokenIndexes.Add(match.Index);
+            var cx = CenterX(match.Token.Bounds);
+            var nearestQty = numbers
+                .Where(n => Math.Abs(CenterX(n.Token.Bounds) - cx) <= 95)
+                .OrderBy(n => Math.Abs(CenterX(n.Token.Bounds) - cx))
+                .Select(n => n.Qty)
+                .FirstOrDefault();
+
+            // In this result UI a quantity of 1 is often shown without a numeric overlay.
+            var quantity = nearestQty ?? 1;
+            items.Add(new LootItemRecord(known, quantity, true));
         }
 
-        if (items.Count == 0)
-        {
-            var names = tokens
-                .Where(t => HasHangulRegex.IsMatch(t.Text))
-                .Where(t => !IsIgnored(t.Text))
-                .OrderBy(t => t.Bounds.Left)
-                .ThenBy(t => t.Bounds.Top)
-                .Select(t => NormalizeName(t.Text))
-                .Where(t => t.Length >= 2)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .Take(8)
-                .ToList();
+        var unknownNames = tokens
+            .Select((t, index) => (Token: t, Index: index))
+            .Where(x => HasHangulRegex.IsMatch(x.Token.Text))
+            .Where(x => !IsIgnored(x.Token.Text))
+            .Where(x => !KnownItems.Any(k =>
+                TextMatcher.IsMatch(x.Token.Text, k, "general") ||
+                TextMatcher.Normalize(k).Contains(TextMatcher.Normalize(x.Token.Text), StringComparison.OrdinalIgnoreCase)))
+            .Where(x => x.Token.Text.Length >= 2)
+            .OrderBy(x => x.Token.Bounds.Left)
+            .ThenBy(x => x.Token.Bounds.Top)
+            .Select(x => NormalizeName(x.Token.Text))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(8)
+            .ToList();
 
-            foreach (var name in names)
-                items.Add(new LootItemRecord(name, null, false));
-        }
+        foreach (var name in unknownNames)
+            items.Add(new LootItemRecord(name, null, false));
 
         return items;
     }
