@@ -91,10 +91,16 @@
           1080
         ],
         "lootRegion": [
+          560,
+          500,
+          1360,
+          730
+        ],
+        "lootHeader": [
+          780,
           430,
-          430,
-          1490,
-          760
+          1140,
+          520
         ]
       },
       "targets": {
@@ -322,6 +328,21 @@
             ],
             "mode": "general",
             "weight": 1
+          }
+        },
+        "lootHeader": {
+          "region": "lootHeader",
+          "enabled": true,
+          "minimumScore": 2,
+          "requiredEvidence": [
+            "ocr"
+          ],
+          "ocr": {
+            "phrases": [
+              "발견한 전리품"
+            ],
+            "mode": "contains",
+            "weight": 2
           }
         }
       }
