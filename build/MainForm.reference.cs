@@ -53,6 +53,26 @@ public sealed class MainForm : Form
         IntegralHeight = false
     };
 
+    private readonly ListBox _lootRecent = new()
+    {
+        BorderStyle = BorderStyle.None,
+        BackColor = Color.White,
+        ForeColor = Color.FromArgb(43, 56, 63),
+        Font = new Font("맑은 고딕", 9.2f, FontStyle.Bold),
+        IntegralHeight = false
+    };
+
+    private readonly ListBox _lootTotals = new()
+    {
+        BorderStyle = BorderStyle.None,
+        BackColor = Color.White,
+        ForeColor = Color.FromArgb(31, 112, 80),
+        Font = new Font("맑은 고딕", 9.2f, FontStyle.Bold),
+        IntegralHeight = false
+    };
+
+    private readonly Label _lootStatus = MakeLabel("보상 화면이 나오면 자동으로 OCR 기록합니다.", 8.2f, FontStyle.Regular, Color.FromArgb(133, 144, 151));
+
     private readonly RichTextBox _logBox = new()
     {
         Dock = DockStyle.Fill,
@@ -93,8 +113,8 @@ public sealed class MainForm : Form
 
         Text = "어비스 오토";
         Width = 1050;
-        Height = 720;
-        MinimumSize = new Size(980, 660);
+        Height = 790;
+        MinimumSize = new Size(980, 720);
         StartPosition = FormStartPosition.CenterScreen;
         BackColor = Color.FromArgb(247, 249, 249);
         ForeColor = Color.FromArgb(25, 32, 37);
@@ -194,7 +214,7 @@ public sealed class MainForm : Form
         content.RowStyles.Add(new RowStyle(SizeType.Absolute, 238));
         content.RowStyles.Add(new RowStyle(SizeType.Absolute, 80));
         content.RowStyles.Add(new RowStyle(SizeType.Absolute, 80));
-        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 118));
+        content.RowStyles.Add(new RowStyle(SizeType.Absolute, 170));
         content.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         content.RowStyles.Add(new RowStyle(SizeType.Absolute, 52));
 
@@ -253,14 +273,46 @@ public sealed class MainForm : Form
         settings.Controls.Add(setFlow);
 
         var records = Card();
-        records.Padding = new Padding(18, 10, 18, 10);
-        var recTitle = MakeLabel("☰  최근 기록", 9, FontStyle.Bold, Color.FromArgb(58, 68, 74));
-        recTitle.Dock = DockStyle.Top;
-        recTitle.Height = 27;
-        records.Controls.Add(recTitle);
-        _recent.Dock = DockStyle.Fill;
-        _recent.BringToFront();
-        records.Controls.Add(_recent);
+        records.Padding = new Padding(14, 10, 14, 10);
+
+        var lootGrid = new TableLayoutPanel
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 2,
+            RowCount = 1,
+            BackColor = Color.White,
+            Padding = new Padding(0)
+        };
+        lootGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+        lootGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+
+        var recentLootCard = new Panel { Dock = DockStyle.Fill, BackColor = Color.White, Padding = new Padding(10, 4, 14, 4) };
+        var recentLootTitle = MakeLabel("✦  최근 획득 아이템", 10, FontStyle.Bold, Color.FromArgb(42, 55, 62));
+        recentLootTitle.Dock = DockStyle.Top;
+        recentLootTitle.Height = 28;
+        var recentLootSub = MakeLabel("방금 끝난 판의 OCR 결과", 7.8f, FontStyle.Regular, Color.FromArgb(143, 153, 160));
+        recentLootSub.Dock = DockStyle.Top;
+        recentLootSub.Height = 22;
+        _lootRecent.Dock = DockStyle.Fill;
+        recentLootCard.Controls.Add(_lootRecent);
+        recentLootCard.Controls.Add(recentLootSub);
+        recentLootCard.Controls.Add(recentLootTitle);
+
+        var totalLootCard = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(247, 252, 249), Padding = new Padding(14, 4, 10, 4) };
+        var totalLootTitle = MakeLabel("Σ  이번 실행 누적 획득량", 10, FontStyle.Bold, Color.FromArgb(29, 105, 75));
+        totalLootTitle.Dock = DockStyle.Top;
+        totalLootTitle.Height = 28;
+        _lootStatus.Dock = DockStyle.Top;
+        _lootStatus.Height = 22;
+        _lootTotals.Dock = DockStyle.Fill;
+        _lootTotals.BackColor = Color.FromArgb(247, 252, 249);
+        totalLootCard.Controls.Add(_lootTotals);
+        totalLootCard.Controls.Add(_lootStatus);
+        totalLootCard.Controls.Add(totalLootTitle);
+
+        lootGrid.Controls.Add(recentLootCard, 0, 0);
+        lootGrid.Controls.Add(totalLootCard, 1, 0);
+        records.Controls.Add(lootGrid);
 
         var logPanel = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(247, 249, 249), Padding = new Padding(0, 6, 0, 0), Visible = false };
         logPanel.Controls.Add(_logBox);
@@ -480,6 +532,13 @@ public sealed class MainForm : Form
                 _averageValue.Text = average is null ? "--:--" : $"{average.Value:mm\\:ss}";
             });
 
+            _engine.LootUpdated += snapshot => Ui(() => UpdateLoot(snapshot));
+
+            _lootRecent.Items.Clear();
+            _lootTotals.Items.Clear();
+            _lootStatus.Text = "보상 화면이 나오면 자동으로 OCR 기록합니다.";
+            _lootStatus.ForeColor = Color.FromArgb(133, 144, 151);
+
             _cts = new CancellationTokenSource();
             _uiRunStarted = DateTimeOffset.Now;
             _roundUiStarted = DateTimeOffset.Now;
@@ -571,6 +630,32 @@ public sealed class MainForm : Form
             _stageDots[i].Text = done ? "✓" : (i + 1).ToString();
             _stageTitles[i].ForeColor = active ? Color.FromArgb(28, 82, 60) : Color.FromArgb(45, 55, 61);
         }
+    }
+
+    private void UpdateLoot(LootSnapshot snapshot)
+    {
+        _lootRecent.Items.Clear();
+        foreach (var item in snapshot.Recent.Take(6))
+        {
+            var qty = item.Quantity is int q ? $"  × {q:N0}" : "  · 수량 확인 필요";
+            var prefix = item.Recognized ? "◆" : "⚠";
+            _lootRecent.Items.Add($"{prefix}  {item.Name}{qty}");
+        }
+
+        _lootTotals.Items.Clear();
+        foreach (var total in snapshot.Totals.OrderByDescending(x => x.Value).ThenBy(x => x.Key).Take(8))
+            _lootTotals.Items.Add($"{total.Key}    {total.Value:N0}");
+
+        if (snapshot.Totals.Count == 0)
+            _lootTotals.Items.Add("아직 누적된 인식 결과가 없습니다.");
+
+        _lootStatus.Text = snapshot.ScreenshotPath is null
+            ? $"{snapshot.Destination} · {snapshot.Round}판 보상 기록 완료"
+            : $"{snapshot.Destination} · {snapshot.Round}판 · 미인식 캡처 저장됨";
+
+        _lootStatus.ForeColor = snapshot.ScreenshotPath is null
+            ? Color.FromArgb(38, 126, 89)
+            : Color.FromArgb(194, 112, 55);
     }
 
     private void UpdateModeSummary()
