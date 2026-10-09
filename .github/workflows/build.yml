@@ -1,4 +1,4 @@
-name: Build AbyssRunner Loot Dashboard V2 EXE
+name: Build AbyssRunner Loot Dashboard V3 Revival Fix EXE
 
 on:
   push:
@@ -62,6 +62,10 @@ jobs:
       - name: Apply click stability patch
         shell: pwsh
         run: .\build\patch-click-stability.ps1
+
+      - name: Apply reliable text-only revival patch
+        shell: pwsh
+        run: .\build\patch-revival-reliable.ps1
 
       - name: Apply loot OCR tracking patch
         shell: pwsh
@@ -139,6 +143,8 @@ jobs:
           if (-not $src.Contains("HandleOptionalChallengeConfirmAsync")) { throw "Challenge behavior patch missing" }
           if (-not $src.Contains("OtherDungeonAsync")) { throw "Other dungeon behavior patch missing" }
           if (-not $src.Contains("LootUpdated") -or -not $src.Contains("RecordLootIfAvailableAsync")) { throw "Loot tracking engine patch missing" }
+          if (-not $src.Contains("revival-text-click") -or -not $src.Contains("revival-success")) { throw "Reliable text-only revival patch missing" }
+          if ($src.Contains("revivalContext.Matched && revival.Matched")) { throw "Old revival context gate still present" }
           if (-not $src.Contains("loot-header") -or -not $src.Contains("발견한 전리품 OCR 미감지")) { throw "Loot header gating patch missing" }
           if (-not (Test-Path ".\work\src\AbyssRunner\Core\LootTracker.cs")) { throw "LootTracker source missing" }
 
@@ -157,6 +163,6 @@ jobs:
       - name: Upload EXE package
         uses: actions/upload-artifact@v4
         with:
-          name: AbyssRunner-loot-dashboard-v2
+          name: AbyssRunner-loot-dashboard-v3-revival-fix
           path: dist/**
           if-no-files-found: error
