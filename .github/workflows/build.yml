@@ -1,4 +1,4 @@
-name: Build AbyssRunner V4 Delayed Result Buttons EXE
+name: Build AbyssRunner V5 Robust Other Dungeon EXE
 
 on:
   push:
@@ -75,6 +75,10 @@ jobs:
         shell: pwsh
         run: .\build\patch-delayed-result-buttons.ps1
 
+      - name: Apply robust late other-dungeon patch
+        shell: pwsh
+        run: .\build\patch-other-dungeon-late-v2.ps1
+
       - name: Install 1920x1080 profile and templates
         shell: pwsh
         run: |
@@ -140,6 +144,10 @@ jobs:
           if (-not $targets.profiles.'1920x1080'.targets.challengeConfirm.enabled) { throw "Challenge confirmation target missing" }
           if (-not (Test-Path ".\dist\images\challenge_confirm.png")) { throw "Challenge confirmation template missing" }
           if (-not $targets.profiles.'1920x1080'.targets.otherDungeon.enabled) { throw "Other dungeon target missing" }
+          $otherTarget = $targets.profiles.'1920x1080'.targets.otherDungeon
+          if (-not $otherTarget.ocr -or -not ($otherTarget.ocr.phrases -contains "다른 던전 가기")) { throw "Other dungeon OCR target missing" }
+          if ($otherTarget.ocr.weight -lt 2) { throw "Other dungeon OCR weight too low" }
+          if ($otherTarget.requiredEvidence.Count -gt 0) { throw "Other dungeon must not require template evidence" }
           if (-not (Test-Path ".\dist\images\other_dungeon.png")) { throw "Other dungeon template missing" }
           if (-not ($scenario.features.PSObject.Properties.Name -contains "otherDungeonLoop")) { throw "Other dungeon toggle setting missing" }
 
@@ -151,7 +159,8 @@ jobs:
           if ($src.Contains("revivalContext.Matched && revival.Matched")) { throw "Old revival context gate still present" }
           if (-not $src.Contains("loot-header") -or -not $src.Contains("발견한 전리품 OCR 미감지")) { throw "Loot header gating patch missing" }
           if (-not $src.Contains("WaitForResultActionAsync") -or -not $src.Contains("result-action-ready") -or -not $src.Contains("result-touch-delayed-retry")) { throw "Delayed result button patch missing" }
-          if ($scenario.timeouts.retrySeconds -lt 180) { throw "Retry timeout is too short" }
+          if (-not $src.Contains("other-dungeon-destination-ready") -or -not $src.Contains("other-dungeon-transition-wait") -or -not $src.Contains("clickAttempts >= 8")) { throw "Robust late other-dungeon patch missing" }
+          if ($scenario.timeouts.retrySeconds -lt 300) { throw "Retry timeout is too short" }
           if (-not (Test-Path ".\work\src\AbyssRunner\Core\LootTracker.cs")) { throw "LootTracker source missing" }
 
           $inputSrc = Get-Content ".\work\src\AbyssRunner\Input\InterceptionInputController.cs" -Raw
@@ -169,6 +178,6 @@ jobs:
       - name: Upload EXE package
         uses: actions/upload-artifact@v4
         with:
-          name: AbyssRunner-v4-delayed-result-buttons
+          name: AbyssRunner-v5-robust-other-dungeon
           path: dist/**
           if-no-files-found: error
