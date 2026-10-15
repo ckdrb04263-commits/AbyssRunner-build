@@ -3,7 +3,7 @@
   "uiScaleLabel": "1920×1080 / 여기서 부활 / 음식 아이콘",
   "timeouts": {
     "generalSeconds": 20,
-    "retrySeconds": 60,
+    "retrySeconds": 180,
     "combatSeconds": 600,
     "pollGeneralMinMs": 380,
     "pollGeneralMaxMs": 520,
