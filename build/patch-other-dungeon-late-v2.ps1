@@ -3,7 +3,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $p = Join-Path $root 'work\src\AbyssRunner\Core\AutomationEngine.cs'
 $s = Get-Content $p -Raw
 
-$pattern = '(?s)    private async Task<StepResult> OtherDungeonAsync\(nint hwnd, CancellationToken ct\)\s*\{.*?\n    \}\s*\n\s*    private async Task RecordLootIfAvailableAsync'
+$pattern = '(?s)    private async Task<StepResult> OtherDungeonAsync\(nint hwnd, CancellationToken ct\)\s*\{.*?\n    \}\s*\n(?=\s*    private async Task(?:<StepResult>)? (?:RecordLootIfAvailableAsync|RetryAsync))'
 $replacement = @'
     private async Task<StepResult> OtherDungeonAsync(nint hwnd, CancellationToken ct)
     {
@@ -142,7 +142,6 @@ $replacement = @'
         return StepResult.Fail($"{Math.Max(_config.App.Timeouts.RetrySeconds, 300)}초 동안 다른 던전 가기 또는 목적지 화면을 확인하지 못함");
     }
 
-    private async Task RecordLootIfAvailableAsync
 '@
 
 $updated = [regex]::Replace($s, $pattern, $replacement, 1)
