@@ -1,4 +1,4 @@
-name: Build AbyssRunner Loot Dashboard V3 Revival Fix EXE
+name: Build AbyssRunner V4 Delayed Result Buttons EXE
 
 on:
   push:
@@ -70,6 +70,10 @@ jobs:
       - name: Apply loot OCR tracking patch
         shell: pwsh
         run: .\build\patch-loot.ps1
+
+      - name: Apply delayed result-button wait patch
+        shell: pwsh
+        run: .\build\patch-delayed-result-buttons.ps1
 
       - name: Install 1920x1080 profile and templates
         shell: pwsh
@@ -146,6 +150,8 @@ jobs:
           if (-not $src.Contains("revival-text-click") -or -not $src.Contains("revival-success")) { throw "Reliable text-only revival patch missing" }
           if ($src.Contains("revivalContext.Matched && revival.Matched")) { throw "Old revival context gate still present" }
           if (-not $src.Contains("loot-header") -or -not $src.Contains("발견한 전리품 OCR 미감지")) { throw "Loot header gating patch missing" }
+          if (-not $src.Contains("WaitForResultActionAsync") -or -not $src.Contains("result-action-ready") -or -not $src.Contains("result-touch-delayed-retry")) { throw "Delayed result button patch missing" }
+          if ($scenario.timeouts.retrySeconds -lt 180) { throw "Retry timeout is too short" }
           if (-not (Test-Path ".\work\src\AbyssRunner\Core\LootTracker.cs")) { throw "LootTracker source missing" }
 
           $inputSrc = Get-Content ".\work\src\AbyssRunner\Input\InterceptionInputController.cs" -Raw
@@ -163,6 +169,6 @@ jobs:
       - name: Upload EXE package
         uses: actions/upload-artifact@v4
         with:
-          name: AbyssRunner-loot-dashboard-v3-revival-fix
+          name: AbyssRunner-v4-delayed-result-buttons
           path: dist/**
           if-no-files-found: error
