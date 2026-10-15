@@ -16,7 +16,7 @@ if (-not $s.Contains('_activeDestination = destination;')) {
     $s = $s.Replace($needle, $needle + "`r`n        _activeDestination = destination;")
 }
 
-$pattern = '(?s)    private async Task<StepResult> OtherDungeonAsync\(nint hwnd, CancellationToken ct\)\s*\{.*?\n    \}\s*\n(?=\s*    private async Task(?:<StepResult>)? (?:RecordLootIfAvailableAsync|RetryAsync))'
+$pattern = '(?s)    private async Task<StepResult> OtherDungeonAsync\(nint hwnd, CancellationToken ct\)\s*\{.*?\n    \}\s*\n(?=\s*    private async Task(?:<StepResult>)? (?:WaitForResultActionAsync|RecordLootIfAvailableAsync|RetryAsync))'
 $replacement = @'
     private async Task<StepResult> OtherDungeonAsync(nint hwnd, CancellationToken ct)
     {
