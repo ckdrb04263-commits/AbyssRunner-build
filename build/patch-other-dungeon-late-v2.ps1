@@ -3,6 +3,19 @@ $root = Split-Path -Parent $PSScriptRoot
 $p = Join-Path $root 'work\src\AbyssRunner\Core\AutomationEngine.cs'
 $s = Get-Content $p -Raw
 
+
+# Keep selected destination available for the post-result "other dungeon" route.
+if (-not $s.Contains('private Destination _activeDestination;')) {
+    $needle = '    private RunStage _stage = RunStage.Idle;'
+    if (-not $s.Contains($needle)) { throw 'Active destination field patch point not found' }
+    $s = $s.Replace($needle, $needle + "`r`n    private Destination _activeDestination;")
+}
+if (-not $s.Contains('_activeDestination = destination;')) {
+    $needle = '        _roundTimes.Clear();'
+    if (-not $s.Contains($needle)) { throw 'Active destination assignment patch point not found' }
+    $s = $s.Replace($needle, $needle + "`r`n        _activeDestination = destination;")
+}
+
 $pattern = '(?s)    private async Task<StepResult> OtherDungeonAsync\(nint hwnd, CancellationToken ct\)\s*\{.*?\n    \}\s*\n(?=\s*    private async Task(?:<StepResult>)? (?:RecordLootIfAvailableAsync|RetryAsync))'
 $replacement = @'
     private async Task<StepResult> OtherDungeonAsync(nint hwnd, CancellationToken ct)
