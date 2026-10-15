@@ -59,6 +59,10 @@ jobs:
         shell: pwsh
         run: Copy-Item ".\build\MainForm.reference.cs" ".\work\src\AbyssRunner\UI\MainForm.cs" -Force
 
+      - name: Remove loot/item tracking UI
+        shell: pwsh
+        run: .\build\patch-remove-loot-ui.ps1
+
       - name: Apply click stability patch
         shell: pwsh
         run: .\build\patch-click-stability.ps1
@@ -67,9 +71,6 @@ jobs:
         shell: pwsh
         run: .\build\patch-revival-reliable.ps1
 
-      - name: Apply loot OCR tracking patch
-        shell: pwsh
-        run: .\build\patch-loot.ps1
 
       - name: Apply delayed result-button wait patch
         shell: pwsh
