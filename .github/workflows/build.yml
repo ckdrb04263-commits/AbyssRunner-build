@@ -1,4 +1,4 @@
-name: Build AbyssRunner V5 Robust Other Dungeon EXE
+name: Build AbyssRunner V6 No Loot Tracking EXE
 
 on:
   push:
@@ -138,9 +138,6 @@ jobs:
           if (-not ($revivalTarget.ocr.phrases -contains "여기서 부활")) { throw "Revival OCR phrase missing" }
           if (-not $scenario.features.foodAssist) { throw "Food assist not enabled" }
           if (-not $targets.profiles.'1920x1080') { throw "1920 profile missing" }
-          if (-not $targets.profiles.'1920x1080'.regions.lootRegion) { throw "Loot OCR region missing" }
-          if (-not $targets.profiles.'1920x1080'.targets.lootHeader.enabled) { throw "Loot header OCR target missing" }
-          if (-not ($targets.profiles.'1920x1080'.targets.lootHeader.ocr.phrases -contains "발견한 전리품")) { throw "Loot header phrase missing" }
           if (-not $targets.profiles.'1920x1080'.targets.challengeConfirm.enabled) { throw "Challenge confirmation target missing" }
           if (-not (Test-Path ".\dist\images\challenge_confirm.png")) { throw "Challenge confirmation template missing" }
           if (-not $targets.profiles.'1920x1080'.targets.otherDungeon.enabled) { throw "Other dungeon target missing" }
@@ -154,14 +151,11 @@ jobs:
           $src = Get-Content ".\work\src\AbyssRunner\Core\AutomationEngine.cs" -Raw
           if (-not $src.Contains("HandleOptionalChallengeConfirmAsync")) { throw "Challenge behavior patch missing" }
           if (-not $src.Contains("OtherDungeonAsync")) { throw "Other dungeon behavior patch missing" }
-          if (-not $src.Contains("LootUpdated") -or -not $src.Contains("RecordLootIfAvailableAsync")) { throw "Loot tracking engine patch missing" }
           if (-not $src.Contains("revival-text-click") -or -not $src.Contains("revival-success")) { throw "Reliable text-only revival patch missing" }
           if ($src.Contains("revivalContext.Matched && revival.Matched")) { throw "Old revival context gate still present" }
-          if (-not $src.Contains("loot-header") -or -not $src.Contains("발견한 전리품 OCR 미감지")) { throw "Loot header gating patch missing" }
           if (-not $src.Contains("WaitForResultActionAsync") -or -not $src.Contains("result-action-ready") -or -not $src.Contains("result-touch-delayed-retry")) { throw "Delayed result button patch missing" }
           if (-not $src.Contains("other-dungeon-destination-ready") -or -not $src.Contains("other-dungeon-transition-wait") -or -not $src.Contains("clickAttempts >= 8")) { throw "Robust late other-dungeon patch missing" }
           if ($scenario.timeouts.retrySeconds -lt 300) { throw "Retry timeout is too short" }
-          if (-not (Test-Path ".\work\src\AbyssRunner\Core\LootTracker.cs")) { throw "LootTracker source missing" }
 
           $inputSrc = Get-Content ".\work\src\AbyssRunner\Input\InterceptionInputController.cs" -Raw
           if (-not $inputSrc.Contains("PickStablePointInside") -or -not $inputSrc.Contains("stableHoldMin")) { throw "Stable click patch missing" }
@@ -171,13 +165,14 @@ jobs:
 
           $ui = Get-Content ".\work\src\AbyssRunner\UI\MainForm.cs" -Raw
           if (-not $ui.Contains("전투가 끝나기를 기다리고 있어요") -or -not $ui.Contains("ToggleSwitch") -or -not $ui.Contains("_otherDungeon")) { throw "Reference dashboard UI missing" }
-          if (-not $ui.Contains("최근 획득 아이템") -or -not $ui.Contains("이번 실행 누적 획득량") -or -not $ui.Contains("LootUpdated")) { throw "Loot dashboard UI missing" }
+          if ($ui.Contains("최근 획득 아이템") -or $ui.Contains("이번 실행 누적 획득량") -or $ui.Contains("LootUpdated") -or $ui.Contains("UpdateLoot(")) { throw "Loot UI was not removed" }
+          if ($targets.profiles.'1920x1080'.targets.PSObject.Properties.Name -contains "lootHeader") { throw "Loot target was not removed" }
 
           Get-Item ".\dist\AbyssRunner.exe" | Select-Object Name,Length
 
       - name: Upload EXE package
         uses: actions/upload-artifact@v4
         with:
-          name: AbyssRunner-v5-robust-other-dungeon
+          name: AbyssRunner-v6-no-loot-tracking
           path: dist/**
           if-no-files-found: error
