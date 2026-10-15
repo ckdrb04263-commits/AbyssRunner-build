@@ -85,9 +85,9 @@
           1040
         ],
         "otherDungeon": [
-          1050,
-          920,
-          1360,
+          900,
+          840,
+          1500,
           1080
         ],
         "lootRegion": [
@@ -312,22 +312,20 @@
           "region": "otherDungeon",
           "enabled": true,
           "minimumScore": 2,
-          "requiredEvidence": [
-            "template"
-          ],
+          "requiredEvidence": [],
           "template": {
             "files": [
               "other_dungeon.png"
             ],
-            "threshold": 0.78,
+            "threshold": 0.72,
             "weight": 2
           },
           "ocr": {
             "phrases": [
               "다른 던전 가기"
             ],
-            "mode": "general",
-            "weight": 1
+            "mode": "contains",
+            "weight": 2
           }
         },
         "lootHeader": {
