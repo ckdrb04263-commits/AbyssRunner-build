@@ -24,7 +24,7 @@ $wait = [regex]::Replace(
     '(?s)\s*// The game can skip or very briefly show the "화면을 터치해 주세요" overlay\..*?return StepResult\.Ok\("전투 종료 확인 · " \+ expectedResultAction \+ " 화면 이미 표시됨"\);\s*\}\s*',
     [Environment]::NewLine)
 
-$oldPattern = '(?s)            var result = await _detector\.DetectAsync\(shot, profile, "resultTouch", ct\)\.ConfigureAwait\(false\);\s*if \(result\.Matched && result\.ClickBounds is Rectangle r\)\s*\{.*?\n            \}\s*            await CombatDelay\(ct\)\.ConfigureAwait\(false\);'
+$oldPattern = '(?s)\s*var result = await .*?"resultTouch".*?;\s*if \(result\.Matched.*?\)\s*\{.*?\}\s*await CombatDelay\(ct\)\.ConfigureAwait\(false\);'
 $newBlock = @'
             var retryVisible = await DetectTrackedAsync(shot, profile, "retry", ct).ConfigureAwait(false);
             var otherVisible = await DetectTrackedAsync(shot, profile, "otherDungeon", ct).ConfigureAwait(false);
