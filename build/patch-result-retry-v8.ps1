@@ -231,5 +231,65 @@ $retryMethod = @'
 '@
 
 $s = $s.Substring(0, $retryStart) + $retryMethod + $s.Substring($retryEnd)
+
+# Re-add the optional challenge-confirm helper if replacing RetryAsync removed the helper
+# that the earlier challenge patch inserted next to RetrySameDetectedActionAsync.
+if (-not $s.Contains('private async Task<StepResult> HandleOptionalChallengeConfirmAsync')) {
+    $marker = '    private async Task<StepResult> RetrySameDetectedActionAsync'
+    if (-not $s.Contains($marker)) { throw 'Challenge helper reinsertion marker not found' }
+
+    $helper = @'
+    private async Task<StepResult> HandleOptionalChallengeConfirmAsync(nint hwnd, CancellationToken ct)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(4);
+        var attempts = 0;
+
+        while (DateTime.UtcNow < deadline)
+        {
+            ct.ThrowIfCancellationRequested();
+            using var shot = CaptureChecked(hwnd, out var profile);
+            var confirm = await DetectTrackedAsync(shot, profile, "challengeConfirm", ct).ConfigureAwait(false);
+
+            if (!confirm.Matched)
+            {
+                await Task.Delay(220, ct).ConfigureAwait(false);
+                continue;
+            }
+
+            LogDetection("challengeConfirm", confirm);
+            if (confirm.ClickBounds is not Rectangle click)
+                return StepResult.Fail("도전하기 위치 없음");
+
+            if (attempts >= 3)
+                return StepResult.Fail("도전하기 재시도 한도 초과");
+
+            attempts++;
+            var action = await _input.ClickAsync(click, hwnd, ct).ConfigureAwait(false);
+            RememberInput("click:challengeConfirm", action);
+            _log.Write(_stage, "click", new
+            {
+                target = "challengeConfirm",
+                action.Success,
+                action.WindowLocalPoint,
+                action.Reason,
+                attempt = attempts
+            });
+
+            if (!action.Success)
+                return StepResult.Fail("도전하기 입력 실패: " + action.Reason);
+
+            await Task.Delay(Random.Shared.Next(350, 601), ct).ConfigureAwait(false);
+
+            if (await IsGoneStableAsync(hwnd, "challengeConfirm", 2, ct).ConfigureAwait(false))
+                return StepResult.Ok("도전 팝업 처리");
+        }
+
+        return StepResult.Ok("도전 팝업 없음");
+    }
+
+'@
+    $s = $s.Replace($marker, $helper + $marker)
+}
+
 Set-Content $p $s -Encoding utf8
 Write-Host 'Unified result + robust retry patch applied.'
