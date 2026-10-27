@@ -1,4 +1,4 @@
-name: Build AbyssRunner V7 Result Timeout Fix EXE
+name: Build AbyssRunner V8 Result Retry Fix EXE
 
 on:
   push:
@@ -84,6 +84,10 @@ jobs:
         shell: pwsh
         run: .\build\patch-combat-result-timeout.ps1
 
+      - name: Apply unified result and retry patch
+        shell: pwsh
+        run: .\build\patch-result-retry-v8.ps1
+
       - name: Install 1920x1080 profile and templates
         shell: pwsh
         run: |
@@ -162,7 +166,9 @@ jobs:
           if (-not $src.Contains("other-dungeon-destination-ready") -or -not $src.Contains("other-dungeon-transition-wait") -or -not $src.Contains("clickAttempts >= 8")) { throw "Robust late other-dungeon patch missing" }
           if ($scenario.timeouts.retrySeconds -lt 300) { throw "Retry timeout is too short" }
           if ($scenario.timeouts.combatSeconds -lt 1800) { throw "Combat result timeout is too short" }
-          if (-not $src.Contains("result-direct-action-ready")) { throw "Direct result-action detection patch missing" }
+          if (-not $src.Contains("result-action-observed")) { throw "Unified result detection patch missing" }
+          if (-not $src.Contains("retry-click") -or -not $src.Contains("retry-transition-ok") -or -not $src.Contains("retry-stage-result-touch")) { throw "Robust retry patch missing" }
+          if ($src.Contains("result-direct-action-ready")) { throw "Old V7 direct result branch still present" }
 
           $inputSrc = Get-Content ".\work\src\AbyssRunner\Input\InterceptionInputController.cs" -Raw
           if (-not $inputSrc.Contains("PickStablePointInside") -or -not $inputSrc.Contains("stableHoldMin")) { throw "Stable click patch missing" }
@@ -180,6 +186,6 @@ jobs:
       - name: Upload EXE package
         uses: actions/upload-artifact@v4
         with:
-          name: AbyssRunner-v7-result-timeout-fix
+          name: AbyssRunner-v8-result-retry-fix
           path: dist/**
           if-no-files-found: error
