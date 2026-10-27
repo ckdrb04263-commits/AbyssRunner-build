@@ -4,7 +4,7 @@
   "timeouts": {
     "generalSeconds": 45,
     "retrySeconds": 300,
-    "combatSeconds": 600,
+    "combatSeconds": 1800,
     "pollGeneralMinMs": 380,
     "pollGeneralMaxMs": 520,
     "pollCombatMinMs": 620,
