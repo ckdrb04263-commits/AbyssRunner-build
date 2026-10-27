@@ -80,7 +80,16 @@ $s = $s.Substring(0, $waitStart) + $wait + $s.Substring($waitEnd)
 
 $retryStart = $s.IndexOf('    private async Task<StepResult> RetryAsync(nint hwnd, CancellationToken ct)')
 if ($retryStart -lt 0) { throw 'RetryAsync not found' }
-$retryEnd = $s.IndexOf('    private async Task<StepResult> WaitForTargetAsync', $retryStart + 10)
+$retryEnd = -1
+foreach ($candidate in @(
+    '    private async Task<StepResult> RetrySameDetectedActionAsync',
+    '    private async Task<bool> IsGoneOrNextStableAsync',
+    '    private async Task<StepResult> WaitForTargetAsync',
+    '    private async Task<bool> IsGoneStableAsync'
+)) {
+    $i = $s.IndexOf($candidate, $retryStart + 10)
+    if ($i -ge 0 -and ($retryEnd -lt 0 -or $i -lt $retryEnd)) { $retryEnd = $i }
+}
 if ($retryEnd -lt 0) { throw 'RetryAsync end marker not found' }
 
 $retryMethod = @'
