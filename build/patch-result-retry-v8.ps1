@@ -24,7 +24,7 @@ $wait = [regex]::Replace(
     '(?s)\s*// The game can skip or very briefly show the "화면을 터치해 주세요" overlay\..*?return StepResult\.Ok\("전투 종료 확인 · " \+ expectedResultAction \+ " 화면 이미 표시됨"\);\s*\}\s*',
     [Environment]::NewLine)
 
-$oldPattern = '(?s)\s*var result = await .*?"resultTouch".*?;\s*if \(result\.Matched.*?\)\s*\{.*?\}\s*await CombatDelay\(ct\)\.ConfigureAwait\(false\);'
+$oldPattern = '(?s)\s*var result = await DetectTrackedAsync\(shot, profile, "resultTouch", ct\)\.ConfigureAwait\(false\);\s*if \(result\.Matched && result\.ClickBounds is Rectangle touch\)\s*\{.*?\}\s*await CombatPollDelay\(ct\)\.ConfigureAwait\(false\);'
 $newBlock = @'
             var retryVisible = await DetectTrackedAsync(shot, profile, "retry", ct).ConfigureAwait(false);
             var otherVisible = await DetectTrackedAsync(shot, profile, "otherDungeon", ct).ConfigureAwait(false);
@@ -64,13 +64,10 @@ $newBlock = @'
                 continue;
             }
 
-            await CombatDelay(ct).ConfigureAwait(false);
+            await CombatPollDelay(ct).ConfigureAwait(false);
 '@
 $updated = [regex]::Replace($wait, $oldPattern, $newBlock, 1)
 if ($updated -eq $wait) {
-    Write-Host '--- WAITRESULT CURRENT SOURCE START ---'
-    Write-Host $wait
-    Write-Host '--- WAITRESULT CURRENT SOURCE END ---'
     throw 'WaitResult result branch patch point not found'
 }
 $wait = $updated
