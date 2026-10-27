@@ -1,4 +1,4 @@
-name: Build AbyssRunner V8 Result Retry Fix EXE
+name: Build AbyssRunner V9 Safe Clear Click EXE
 
 on:
   push:
@@ -88,6 +88,10 @@ jobs:
         shell: pwsh
         run: .\build\patch-result-retry-v8.ps1
 
+      - name: Apply safe result-screen click patch
+        shell: pwsh
+        run: .\build\patch-result-touch-safe-v9.ps1
+
       - name: Install 1920x1080 profile and templates
         shell: pwsh
         run: |
@@ -169,6 +173,8 @@ jobs:
           if (-not $src.Contains("result-action-observed")) { throw "Unified result detection patch missing" }
           if (-not $src.Contains("retry-click") -or -not $src.Contains("retry-transition-ok") -or -not $src.Contains("retry-stage-result-touch")) { throw "Robust retry patch missing" }
           if ($src.Contains("result-direct-action-ready")) { throw "Old V7 direct result branch still present" }
+          if (-not $targets.profiles.'1920x1080'.regions.resultTapSafe) { throw "Safe result tap region missing" }
+          if (-not $src.Contains("result-touch-safe-click") -or -not $src.Contains("result-touch-transition-ok") -or -not $src.Contains("retry-stage-result-touch-safe")) { throw "Safe result tap patch missing" }
 
           $inputSrc = Get-Content ".\work\src\AbyssRunner\Input\InterceptionInputController.cs" -Raw
           if (-not $inputSrc.Contains("PickStablePointInside") -or -not $inputSrc.Contains("stableHoldMin")) { throw "Stable click patch missing" }
@@ -186,6 +192,6 @@ jobs:
       - name: Upload EXE package
         uses: actions/upload-artifact@v4
         with:
-          name: AbyssRunner-v8-result-retry-fix
+          name: AbyssRunner-v9-safe-clear-click
           path: dist/**
           if-no-files-found: error
