@@ -25,9 +25,9 @@
           1080
         ],
         "resultTouch": [
-          620,
-          900,
-          1300,
+          450,
+          800,
+          1470,
           1080
         ],
         "retryButton": [
@@ -184,6 +184,7 @@
           "ocr": {
             "phrases": [
               "화면을 터치해 주세요",
+              "화면을 터치",
               "터치해"
             ],
             "mode": "contains",
@@ -193,22 +194,19 @@
         "retry": {
           "region": "retryButton",
           "enabled": true,
-          "minimumScore": 3,
-          "requiredEvidence": [
-            "ocr",
-            "green"
-          ],
+          "minimumScore": 2,
+          "requiredEvidence": [],
           "ocr": {
             "phrases": [
               "다시 하기"
             ],
-            "mode": "general",
+            "mode": "contains",
             "weight": 2
           },
           "color": {
             "mode": "green",
             "weight": 1,
-            "dominance": 60
+            "dominance": 45
           }
         },
         "skipDialogue": {
