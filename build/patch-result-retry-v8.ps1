@@ -67,7 +67,12 @@ $newBlock = @'
             await CombatDelay(ct).ConfigureAwait(false);
 '@
 $updated = [regex]::Replace($wait, $oldPattern, $newBlock, 1)
-if ($updated -eq $wait) { throw 'WaitResult result branch patch point not found' }
+if ($updated -eq $wait) {
+    Write-Host '--- WAITRESULT CURRENT SOURCE START ---'
+    Write-Host $wait
+    Write-Host '--- WAITRESULT CURRENT SOURCE END ---'
+    throw 'WaitResult result branch patch point not found'
+}
 $wait = $updated
 
 $wait = $wait.Replace(
