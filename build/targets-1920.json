@@ -25,16 +25,16 @@
           1080
         ],
         "resultTouch": [
-          450,
-          800,
-          1470,
+          300,
+          680,
+          1620,
           1080
         ],
         "retryButton": [
-          790,
-          900,
-          1110,
-          1070
+          500,
+          760,
+          1550,
+          1080
         ],
         "skipDialogue": [
           1450,
@@ -85,9 +85,9 @@
           1040
         ],
         "otherDungeon": [
-          900,
-          840,
-          1500,
+          500,
+          760,
+          1600,
           1080
         ]
       },
@@ -187,7 +187,7 @@
               "화면을 터치",
               "터치해"
             ],
-            "mode": "contains",
+            "mode": "general",
             "weight": 2
           }
         },
@@ -198,15 +198,11 @@
           "requiredEvidence": [],
           "ocr": {
             "phrases": [
-              "다시 하기"
+              "다시 하기",
+              "다시하기"
             ],
-            "mode": "contains",
+            "mode": "general",
             "weight": 2
-          },
-          "color": {
-            "mode": "green",
-            "weight": 1,
-            "dominance": 45
           }
         },
         "skipDialogue": {
@@ -303,14 +299,15 @@
             "files": [
               "other_dungeon.png"
             ],
-            "threshold": 0.72,
+            "threshold": 0.68,
             "weight": 2
           },
           "ocr": {
             "phrases": [
-              "다른 던전 가기"
+              "다른 던전 가기",
+              "다른던전가기"
             ],
-            "mode": "contains",
+            "mode": "general",
             "weight": 2
           }
         }
